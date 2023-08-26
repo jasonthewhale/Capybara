@@ -21,7 +21,7 @@ function traverseDOM(oldNode, node) {
         var fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
         var display = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('display');
         var visibility = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('visibility');
-        
+        var bgColor = window.getComputedStyle(links[i].parentNode).getPropertyValue('background-color');
 
         if (parseInt(fontSize) <= 12 && parent.hasAttribute('href')) {
             console.log(parent.getAttribute('href'));

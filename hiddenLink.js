@@ -1,7 +1,7 @@
 let oldBody = document.body.cloneNode(true);
 
 setInterval(() => {
-    traverseLink();
+    traverseDOM(oldBody, document.body);
   }, 5000);  // check every 1s
 
 
@@ -49,16 +49,41 @@ function traverseLink() {
     }
 }
 
-// function traverseDOM(oldNode, node) {
-//     var children = node.childNodes;
-//     var oldChildren = oldNode.childNodes;
 
-//     if(node.tagName === 'STYLE' || node.tagName === 'SCRIPT') {
-//       return; // Ignore style and script tags
-//     }
+function traverseDOM(oldNode, node) {
+    var children = node.childNodes;
+    var oldChildren = oldNode.childNodes;
 
+    console.log('traversing DOM')
 
-    
-//   }
+    if(node.tagName === 'STYLE' || node.tagName === 'SCRIPT') {
+      return; // Ignore style and script tags
+    }
 
-// // traverseDOM(oldBody, document.body)
+  
+    for(var i = 0; i < children.length; i++) {
+        if (children[i].nodeType === 3) {
+        // Get the current font size
+        var parent = children[i].parentNode;
+        // var fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
+        // var display = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('display');
+        // var visibility = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('visibility');
+        var colour = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('color');
+        var bgColor = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('background-color');
+        console.log(colour)
+        console.log(bgColor)
+
+        let similarity = colorSimilarityNormalized(getRGBArray(colour), getRGBArray(bgColor));
+        if (similarity > 0.5 && children[i].nodeType === 3) {
+            console.log(`Link color is: ${colour}`);
+            console.log(`Background color is: ${bgColor}`);
+            console.log(children[i].nodeType);
+        }
+
+  
+      if (oldChildren[i]) {
+        traverseDOM(oldChildren[i], children[i]);
+      }
+    }
+    }
+}
