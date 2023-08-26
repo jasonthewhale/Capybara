@@ -1,7 +1,7 @@
 let oldBody = document.body.cloneNode(true);
-const pureNumber = /^\d{2,}$/;
-const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|tage?|stunden?|minuten?|sekunden?|[a-zA-Z]{1,3}\.?)(?:\s*und)?\s*){2,4}/gi;
-const notCountdown = /(?:\d{1,2}\s*:\s*){4,}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|tage?|stunden?|minuten?|sekunden?|[a-zA-Z]{1,3}\.?)(?:\s*und)?\s*){5,}/gi;
+const pureNumber = /^\d+$/;
+const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){2,4}/gi;
+const notCountdown = /(?:\d{1,2}\s*:\s*){4,}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){5,}/gi;
 
 setInterval(() => {
   traverseDOM(oldBody, document.body);
@@ -18,10 +18,15 @@ function traverseDOM(oldNode, node) {
   for(var i = 0; i < children.length; i++) {
     if(children[i].nodeType === 3 ) { // text node
 
-        if((pureNumber.test(children[i].nodeValue) || countdown.test(children[i].nodeValue)) && !notCountdown.test(children[i].nodeValue)) {
-            if(children[i].nodeValue !== oldChildren[i].nodeValue) {
-            console.log("changed", children[i].nodeValue);
-            children[i].parentNode.parentNode.style.backgroundColor = "red";
+        if(pureNumber.test(children[i].nodeValue)){
+            if(!oldChildren || children[i].nodeValue !== oldChildren[i].nodeValue) {
+                let aimNode = children[i].parentNode.parentNode;
+                let allTexts = extractAllTextNodes(aimNode).join(''); // get all text nodes in the same level
+                
+                if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
+                    children[i].parentNode.parentNode.style.backgroundColor = "red";
+                    console.log("found countdown", allTexts);
+                }
             }
         }
     }
@@ -31,3 +36,21 @@ function traverseDOM(oldNode, node) {
     }
   }
 }
+
+function extractAllTextNodes(element, result = []) {
+    let children = element.childNodes;
+
+    for (let i = 0; i < children.length; i++) {
+        let child = children[i];
+
+        if (child.nodeType === 3) { // if it is a text node
+            result.push(child.nodeValue);
+        } else if (child.nodeType === 1) { // if it is an element node
+            extractAllTextNodes(child, result);
+        }
+    }
+
+    return result;
+}
+
+traverseDOM(document.body);
