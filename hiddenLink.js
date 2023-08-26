@@ -54,15 +54,12 @@ function traverseDOM(oldNode, node) {
     var children = node.childNodes;
     var oldChildren = oldNode.childNodes;
 
-    console.log('traversing DOM')
-
     if(node.tagName === 'STYLE' || node.tagName === 'SCRIPT') {
       return; // Ignore style and script tags
     }
 
   
     for(var i = 0; i < children.length; i++) {
-        if (children[i].nodeType === 3) {
         // Get the current font size
         var parent = children[i].parentNode;
         // var fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
@@ -70,20 +67,19 @@ function traverseDOM(oldNode, node) {
         // var visibility = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('visibility');
         var colour = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('color');
         var bgColor = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('background-color');
-        console.log(colour)
-        console.log(bgColor)
 
         let similarity = colorSimilarityNormalized(getRGBArray(colour), getRGBArray(bgColor));
-        if (similarity > 0.5 && children[i].nodeType === 3) {
+        if (similarity > 0.5 && children[i].nodeType === 3 && children[i].parentNode.tagName !== 'SPAN') {
             console.log(`Link color is: ${colour}`);
             console.log(`Background color is: ${bgColor}`);
-            console.log(children[i].nodeType);
+            console.log(similarity);
+            console.log(children[i].parentNode);
+            children[i].parentNode.parentNode.style.bsckgroundColor = 'red';
         }
 
   
       if (oldChildren[i]) {
         traverseDOM(oldChildren[i], children[i]);
       }
-    }
     }
 }

@@ -22,6 +22,8 @@ function traverseDOM(oldNode, node) {
             if(children[i].nodeValue !== oldChildren[i].nodeValue) {
             console.log("changed", children[i].nodeValue);
             children[i].parentNode.parentNode.style.backgroundColor = "red";
+            children[i].parentNode.parentNode.style.fontSize = "32px";
+            // console.log(children[i].parentNode.parentNode.style);
             }
         }
     }

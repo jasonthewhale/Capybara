@@ -6,14 +6,14 @@
     "icons": {
         "16": "src/icon.jpg"
     },
-    "permissions": ["activeTab", "storage", "scripting"],
+    "permissions": ["activeTab", "storage", "scripting", "windows"],
     "action": {
         "default_popup": "popup.html"
     },
     "content_scripts": [
       {
         "matches": ["<all_urls>"],
-        "js": ["del.js"]
+        "js": ["countdown.js"]
       }
     ]
 }
