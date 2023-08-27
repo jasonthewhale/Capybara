@@ -1,2 +1,2 @@
 .DS_Store
-./rm -rf $HOME/.Trash/*
+node_modules
