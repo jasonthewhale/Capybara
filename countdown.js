@@ -3,6 +3,7 @@ const pureNumber = /^\d+$/;
 const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){2,4}/gi;
 const notCountdown = /(?:\d{1,2}\s*:\s*){4,}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){5,}/gi;
 let countdown_value = 0;
+let malicious_link_count = 0;
 
 setInterval(() => {
   countdown_value = 0;
@@ -39,6 +40,18 @@ function traverseDOM(oldNode, node) {
 
   for(var i = 0; i < children.length; i++) {
     if(children[i].nodeType === 3 ) { // text node
+
+        let fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
+        if (parseInt(fontSize) <= 12
+        && children[i].parentNode.hasAttribute('href')
+        && (children[i].parentNode.getAttribute('href').startsWith('http') || children[i].parentNode.getAttribute('href').includes('.html'))) {
+          children[i].parentNode.style.fontSize = "24px";
+          children[i].parentNode.style.backgroundColor = "red";
+          children[i].parentNode.style.display = "block";
+          children[i].parentNode.style.visibility = "visible";
+          console.log("found link", children[i].parentNode.getAttribute('href'));
+          malicious_link_count ++;
+        }
 
         if(pureNumber.test(children[i].nodeValue)){
             if(!oldChildren || children[i].nodeValue !== oldChildren[i].nodeValue) {
