@@ -1,4 +1,7 @@
 # Bara Guard
+<div style="text-align: center;">
+  <img src="./images/logo.png" alt="Capybara" width="300" height="250"/>
+</div>
 ---
 ![Badge](https://img.shields.io/badge/Chrome%20Extension-v1.0.0-blue)
 
@@ -18,7 +21,9 @@ A Chrome Extension designed to detect and alert users to malicious dark patterns
 
 ## Usage
 
-![Alt Text](./images/extensionDemo.gif)
+<div style="text-align: center;">
+  <img src="./images/extensionDemo.gif" alt="Capybara" width="500" height="300"/>
+</div>
 
 Once installed, the extension will automatically run and analyze webpages you visit. You will be alerted via notifications whenever any malicious dark patterns are detected on the site.
 
