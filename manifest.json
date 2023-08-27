@@ -4,7 +4,7 @@
     "version": "1.0",
     "description": "Detects dark design in shopping website.",
     "icons": {
-        "16": "src/icon.jpg"
+        "16": "src/icon.png"
     },
     "permissions": ["activeTab", "storage", "scripting"],
     "action": {
