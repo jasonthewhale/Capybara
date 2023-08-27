@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener(
             riskImageElement.src = 'src/high-risk.png';
             riskElement.style.color = '#d81e06';
             riskElement.textContent = "High Risk";
-        }else if (countdown_value > 5) {
+        }else if ((request.countdown_value + request.malicious_link_count)> 5) {
             riskImageElement.src = 'src/middle-risk.png';
             riskElement.style.color = '#f4ea2a';
             riskElement.textContent = "Moderate Risk";
