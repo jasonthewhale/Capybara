@@ -2,6 +2,7 @@
 <div style="text-align: center;">
   <img src="./images/logo.png" alt="Capybara" width="300" height="250"/>
 </div>
+
 ---
 ![Badge](https://img.shields.io/badge/Chrome%20Extension-v1.0.0-blue)
 
