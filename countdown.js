@@ -4,30 +4,21 @@ const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|m
 const notCountdown = /(?:\d{1,2}\s*:\s*){4,}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){5,}/gi;
 let countdown_value = 0;
 let malicious_link_count = 0;
+let display_count_down_count = 0;
 
 setInterval(() => {
   countdown_value = 0;
+
   traverseDOM(oldBody, document.body);
-
-  console.log("countdown_value", countdown_value);
-
-  const riskElement = document.getElementById('riskLevel');
-  const riskImageElement = document.getElementById('riskImage');
-  const hiddenRisk = document.getElementById('hiddenSum');
-  const checkboxRisk = document.getElementById('checkboxSum');
-  
-  hiddenRisk.textContent = "sum: " + hidden_count;
-  checkboxRisk.textContent = "sum: " + checkbox_count;
-  
-  if (countdown_value > 15) {
-    riskImageElement.src = 'high-risk.jpg';
-    riskElement.style.color = '#d81e06';
-    riskElement.textContent = "High Risk";
-  }else if (countdown_value > 5) {
-    riskImageElement.src = 'middle-risk.jpg';
-    riskElement.style.color = '#f4ea2a';
-    riskElement.textContent = "Moderate Risk";
+  if (display_count_down_count >= countdown_value) {
+    countdown_value = display_count_down_count;
   }
+  display_count_down_count = countdown_value;
+
+  chrome.runtime.sendMessage({countdown_value: countdown_value, malicious_link_count: malicious_link_count}, function(response) {
+    console.log("checked ", countdown_value, malicious_link_count);
+  });
+
 }, 5000);  // check every 5s
 
 function traverseDOM(oldNode, node) {
