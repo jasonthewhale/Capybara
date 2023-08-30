@@ -19,6 +19,9 @@
         "matches": ["<all_urls>"],
         "js": ["countdown.js"]
       }
-    ]
+    ],
+    "background": {
+        "service_worker": "background.js"
+    }
 }
   
