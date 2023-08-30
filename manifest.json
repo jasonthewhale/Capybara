@@ -17,7 +17,8 @@
     "content_scripts": [
       {
         "matches": ["<all_urls>"],
-        "js": ["countdown.js"]
+        "js": ["countdown.js", "popup.js"],
+        "css": ["content.css"]
       }
     ],
     "background": {
