@@ -1,3 +1,4 @@
+let popup_value = 0;
 window.onload = function() {
     // List of keywords to check for
     const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher'];
@@ -68,6 +69,7 @@ window.onload = function() {
             if(isElementOverlaying(node) && (foundKeyword || includesImg)) {
                 console.log('Potential pop-up behavior: overlaying', node);
                 node.style.border = 'solid red 10px';
+                popup_value += 1;
             };
 
             // Check if the node manipulates cookies or local storage
@@ -126,8 +128,8 @@ function toggleFloatingButton() {
         button.textContent = 'Floating';
 
         button.style.position = 'fixed';
-        button.style.bottom = '20px';  // Adjust bottom position
-        button.style.right = '20px';   // Adjust right position
+        button.style.bottom = '20px';  
+        button.style.right = '20px';  
         button.style.zIndex = '9999';
         button.style.cursor = 'move';
 
