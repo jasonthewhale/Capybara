@@ -81,3 +81,57 @@ function extractAllTextNodes(element, result = []) {
 }
 
 traverseDOM(document.body);
+
+
+// pop up button
+function toggleFloatingButton() {
+    const existingButton = document.querySelector('.floating-button');
+
+    if (existingButton) {
+        existingButton.remove();
+    } else {
+        const button = document.createElement('button');
+        button.classList.add('floating-button');
+        button.textContent = 'Floating';
+
+        button.style.position = 'fixed';
+        button.style.bottom = '20px';  // Adjust bottom position
+        button.style.right = '20px';   // Adjust right position
+        button.style.zIndex = '9999';
+        button.style.cursor = 'move';
+
+        let isDragging = false;
+        let startPosX, startPosY;
+        let startMouseX, startMouseY;
+
+        button.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startPosX = parseFloat(button.style.right);
+            startPosY = parseFloat(button.style.bottom);
+            startMouseX = e.clientX;
+            startMouseY = e.clientY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const offsetX = e.clientX - startMouseX;
+            const offsetY = e.clientY - startMouseY;
+
+            button.style.right = `${startPosX - offsetX}px`;
+            button.style.bottom = `${startPosY - offsetY}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        document.body.appendChild(button);
+    }
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.command === "toggleFloatingButton") {
+        toggleFloatingButton();
+    }
+});
