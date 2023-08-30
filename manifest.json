@@ -3,25 +3,16 @@
     "name": "test",
     "description": "a new test",
     "version": "1.0",
-<<<<<<< HEAD
-    "description": "Detects dark design in shopping website.",
-    "icons": {
-        "16": "src/icon.jpg"
-    },
-    "permissions": ["activeTab", "storage", "scripting", "windows"],
-=======
     "permissions": ["activeTab", "storage", "scripting"],
     "icons" : {
         "16": "images/capybara.png",
         "48": "images/capybara.png"
     },
->>>>>>> origin/yoki
     "action": {
         "default_title": "Click to view a popup",
         "default_popup": "popup.html"
     },
     "content_scripts": [
-<<<<<<< HEAD
       {
         "matches": ["<all_urls>"],
         "js": ["hiddenInfo.js"]
@@ -29,15 +20,3 @@
     ]
 }
   
-=======
-        {
-            "matches": ["<all_urls>"],
-            "js": ["content.js"],
-            "css": ["style.css"]
-        }
-    ],
-    "background": {
-        "service_worker": "background.js"
-    }
-}
->>>>>>> origin/yoki
