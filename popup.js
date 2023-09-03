@@ -1,8 +1,5 @@
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       if (request.countdown_value !== undefined && request.malicious_link_count !== undefined) {
-        
-        
         const riskElement = document.getElementById('riskLevel');
         const riskImageElement = document.getElementById('riskImage');
         const countdownElement = document.getElementById('countdownSum');
@@ -20,10 +17,10 @@ chrome.runtime.onMessage.addListener(
             riskImageElement.src = 'src/middle-risk.png';
             riskElement.style.color = '#f4ea2a';
             riskElement.textContent = "Moderate Risk";
-  }
-  
+        }
+        
       }
-    });
+});
 
 // add click event to toggle floating
 document.addEventListener('DOMContentLoaded', () => {
