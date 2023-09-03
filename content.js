@@ -238,6 +238,7 @@ function traverseDOM(oldNode, node) {
         }
     }
     
+    // recursively traverse the DOM tree
     if (oldChildren[i]) {
       traverseDOM(oldChildren[i], children[i]);
     }
