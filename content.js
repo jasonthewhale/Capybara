@@ -212,6 +212,9 @@ function traverseDOM(oldNode, node) {
     if(children[i].nodeType === 3 ) { // text node
 
         let fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
+        // let bgCol = children[i].parentNode.style.backgroundColor;
+        // let col = children[i].style.color;
+        // let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
         if (parseInt(fontSize) <= 12
         && children[i].parentNode.hasAttribute('href')
         && (children[i].parentNode.getAttribute('href').startsWith('http') || children[i].parentNode.getAttribute('href').includes('.html'))) {
@@ -260,4 +263,34 @@ function extractAllTextNodes(element, result = []) {
     }
 
     return result;
+}
+
+// Helper function to calculate the similarity between two colArrs
+function colorSimilarityNormalized(rgb1, rgb2) {
+    let rDiff = rgb1[0] - rgb2[0];
+    let gDiff = rgb1[1] - rgb2[1];
+    let bDiff = rgb1[2] - rgb2[2];
+    let maxEuclideanDist = Math.sqrt(Math.pow(255, 2) * 3);
+    let dist = Math.sqrt(Math.pow(rDiff,2) + Math.pow(gDiff,2) + Math.pow(bDiff,2));
+    // Range of similarity is [0, 1]
+    return 1 - (dist / maxEuclideanDist);
+}
+
+// Helper function to fetch rgb values from a color string
+function getRGBArray(colorStr) {
+    // Remove "rgb(", "rgba(", ")" and spaces,
+    // then split into an array with the red, green, and blue values
+    let colorArr = colorStr.replace(/rgba?\(|\)|\s/g, '').split(',');
+    // Convert the color values to numbers
+    colorArr = colorArr.map(numStr => Number(numStr));
+    // If the colorStr was in "rgba" format, remove the alpha value
+    if (colorArr.length > 3) colorArr.pop();
+    return colorArr;
+}
+
+// Helper function to get formatted iframe from iframe text
+function getIframe(textIframe) {
+    let parser = new DOMParser();
+    let dom = parser.parseFromString(textIframe, 'text/html');
+    return dom.querySelector('iframe');
 }
