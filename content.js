@@ -212,18 +212,28 @@ function traverseDOM(oldNode, node) {
     if(children[i].nodeType === 3 ) { // text node
 
         let fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
-        // let bgCol = children[i].parentNode.style.backgroundColor;
-        // let col = children[i].style.color;
-        // let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
+        /**
+         * Some extra conditions to check
+         * 
+         * 1. Similarity of color and bgColor:
+         *      let bgCol = children[i].parentNode.style.backgroundColor;
+         *      let col = children[i].style.color;
+         *      let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
+         * 2. The nearest parent className
+         *      isFooter(childNode)
+         */
         if (parseInt(fontSize) <= 12
         && children[i].parentNode.hasAttribute('href')
-        && (children[i].parentNode.getAttribute('href').startsWith('http') || children[i].parentNode.getAttribute('href').includes('.html'))) {
-          children[i].parentNode.style.fontSize = "24px";
-          children[i].parentNode.style.backgroundColor = "red";
-          children[i].parentNode.style.display = "block";
-          children[i].parentNode.style.visibility = "visible";
-          console.log("found link", children[i].parentNode.getAttribute('href'));
-          malicious_link_count ++;
+        && (children[i].parentNode.getAttribute('href').startsWith('http')
+            || children[i].parentNode.getAttribute('href').includes('.html'))) {
+            children[i].parentNode.style.color = "red";
+            children[i].parentNode.style.display = "block";
+            children[i].parentNode.style.visibility = "visible";
+            // Add black border to hidden link
+            children[i].parentNode.style.border = 'solid black';
+            children[i].parentNode.style.borderWidth = '3px';
+            console.log("found link", children[i].parentNode.getAttribute('href'));
+            malicious_link_count ++;
         }
         
         // check if the text node is a countdown
@@ -293,4 +303,24 @@ function getIframe(textIframe) {
     let parser = new DOMParser();
     let dom = parser.parseFromString(textIframe, 'text/html');
     return dom.querySelector('iframe');
+}
+
+// Fetch the nearest parent className
+function _recurClassNameFinder(childNode) {
+    if (childNode.parentNode.className) {
+        return childNode.parentNode.className;
+    } else {
+        return _recurClassNameFinder(childNode.parentNode);
+    }
+}
+
+// Check if the node is in the footer (Unable to catch Temu since its className is a mess)
+function isFooter(childNode) {
+    let className = _recurClassNameFinder(childNode).toLowerCase();
+    if (typeof className !== 'string') {
+        console.log(`${className} is not a string`)
+        return true;
+    }
+    let ftKeyWords = ['ft', 'nav', 'footer'];
+    return ftKeyWords.find(keyword => className.includes(keyword));
 }
