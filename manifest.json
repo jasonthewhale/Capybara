@@ -3,7 +3,7 @@
     "name": "test",
     "description": "a new test",
     "version": "1.0",
-    "permissions": ["activeTab", "storage", "scripting"],
+    "permissions": ["activeTab", "storage", "scripting", "tabs"],
     "icons" : {
         "16": "images/capybara.png",
         "48": "images/capybara.png"

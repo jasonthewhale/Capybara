@@ -1,5 +1,23 @@
-let popup_value = 0;
+// calculate the sum of every dark pattern
+let countdown_value = 0;
+let poup_value = 0;
+let malicious_link_count = 0;
+let display_count_down_count = 0;
+
+// clone the body of the page
+let oldBody = document.body.cloneNode(true);
+const pureNumber = /^\d+$/;
+// regex for countdown
+const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){2,4}/gi;
+// regex for not countdown
+const notCountdown = /(?:\d{1,2}\s*:\s*){4,}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){5,}/gi;
+
 window.onload = function() {
+    // Get the current URL
+    const currentPageURL = window.location.href;
+    const countdownValues = {}; 
+    countdownValues[currentPageURL] = 0;
+
     // List of keywords to check for
     const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher'];
 
@@ -16,6 +34,23 @@ window.onload = function() {
             label.style.backgroundColor = 'yellow';
         }
     }
+
+    // check every 5s
+    // setInterval(() => {
+    //     countdown_value = 0;
+      
+    //     traverseDOM(oldBody, document.body);
+    //     if (display_count_down_count >= countdown_value) {
+    //       countdown_value = display_count_down_count;
+    //     }
+    //     display_count_down_count = countdown_value;
+      
+    //     chrome.runtime.sendMessage({countdown_value: countdown_value, malicious_link_count: malicious_link_count}, function(response) {
+    //       console.log("checked ", countdown_value, malicious_link_count);
+    //     });
+      
+    // }, 5000);  
+
     });
 
 
@@ -41,6 +76,18 @@ window.onload = function() {
                     analyzeNodeForPopUp(target);
                 }
             }
+        });
+
+        // Check countdown after every mutation
+        countdown_value = 0;
+        traverseDOM(oldBody, document.body);
+        if (display_count_down_count >= countdown_value) {
+            countdown_value = display_count_down_count;
+        }
+        display_count_down_count = countdown_value;
+
+        chrome.runtime.sendMessage({countdown_value: countdown_value, malicious_link_count: malicious_link_count}, function(response) {
+            console.log("checked ", countdown_value, malicious_link_count);
         });
     });
 
@@ -68,20 +115,20 @@ window.onload = function() {
             // Check for overlay behavior
             if(isElementOverlaying(node) && (foundKeyword || includesImg)) {
                 console.log('Potential pop-up behavior: overlaying', node);
-                node.style.border = 'solid red 10px';
-                popup_value += 1;
+                centeredPopupFound = false;
+                findCenteredPopup(node);
             };
 
             // Check if the node manipulates cookies or local storage
-            if (node instanceof HTMLElement) {
-                const attributes = node.attributes;
-                for (let i = 0; i < attributes.length; i++) {
-                    const attributeName = attributes[i].name.toLowerCase();
-                    if (attributeName.includes('cookie') || attributeName.includes('localStorage')) {
-                        console.log('Node with potential cookie-related behavior:', node);
-                    }
-                }
-            }
+            // if (node instanceof HTMLElement) {
+            //     const attributes = node.attributes;
+            //     for (let i = 0; i < attributes.length; i++) {
+            //         const attributeName = attributes[i].name.toLowerCase();
+            //         if (attributeName.includes('cookie') || attributeName.includes('localStorage')) {
+            //             console.log('Node with potential cookie-related behavior:', node);
+            //         }
+            //     }
+            // }
         }
     };
 
@@ -112,6 +159,95 @@ window.onload = function() {
         
         return styleMatch ? styleMatch[1] : classMatch ? classMatch[1] : null;
     }
+
+    let centeredPopupFound = false; // Add a flag to track if a centered popup has been found
+    function findCenteredPopup(element) {
+        if (centeredPopupFound) return; 
+
+        // Get the position and size information of the element
+        const boundingBox = element.getBoundingClientRect();
+    
+        // Get the width and height of the viewport
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+    
+        // Define a margin value
+        const margin = 20;
+    
+        // Check if the element is centered with the margin
+        if (
+            Math.abs(boundingBox.left + boundingBox.width / 2 - viewportWidth / 2) < margin &&
+            Math.abs(boundingBox.top + boundingBox.height / 2 - viewportHeight / 2) < margin &&
+            boundingBox.height < viewportHeight * 0.8 &&
+            boundingBox.width < viewportWidth * 0.7
+        ) {
+            console.log('centered popup:', element);
+
+            //element.style.border = '5px outset blue';
+
+            const cornerSize = '5px solid black';
+
+            const cornerOffset = '0px';
+        
+            const cornerStyle = `
+                position: absolute;
+                width: 10px;
+                height: 10px;
+                z-index: 9999999;
+                !important;
+            `;
+        
+            const topLeftCorner = document.createElement('div');
+            topLeftCorner.style = `
+                ${cornerStyle}
+                top: ${cornerOffset};
+                left: ${cornerOffset};
+                border-left: ${cornerSize};
+                border-top: ${cornerSize};
+            `;
+        
+            const topRightCorner = document.createElement('div');
+            topRightCorner.style = `
+                ${cornerStyle}
+                top: ${cornerOffset};
+                right: ${cornerOffset};
+                border-right: ${cornerSize};
+                border-top: ${cornerSize};
+            `;
+        
+            const bottomLeftCorner = document.createElement('div');
+            bottomLeftCorner.style = `
+                ${cornerStyle}
+                bottom: ${cornerOffset};
+                left: ${cornerOffset};
+                border-left: ${cornerSize};
+                border-bottom: ${cornerSize};
+            `;
+        
+            const bottomRightCorner = document.createElement('div');
+            bottomRightCorner.style = `
+                ${cornerStyle}
+                bottom: ${cornerOffset};
+                right: ${cornerOffset};
+                border-right: ${cornerSize};
+                border-bottom: ${cornerSize};
+            `;
+        
+            element.appendChild(topLeftCorner);
+            element.appendChild(topRightCorner);
+            element.appendChild(bottomLeftCorner);
+            element.appendChild(bottomRightCorner);
+
+            centeredPopupFound = true;
+            return;
+        }
+    
+        // Recursively iterate through child div elements
+        const childDivs = element.querySelectorAll('div');
+        for (const childDiv of childDivs) {
+            findCenteredPopup(childDiv);
+        }
+    }  
     
 };
 
@@ -128,7 +264,7 @@ function toggleFloatingButton() {
         button.textContent = 'Floating';
 
         button.style.position = 'fixed';
-        button.style.bottom = '20px';  
+        button.style.bottom = '20px'; 
         button.style.right = '20px';  
         button.style.zIndex = '9999';
         button.style.cursor = 'move';
@@ -168,3 +304,68 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         toggleFloatingButton();
     }
 });
+
+
+
+
+// loop through all text nodes
+function traverseDOM(oldNode, node) {
+  var children = node.childNodes;
+  var oldChildren = oldNode.childNodes;
+  
+  if(node.tagName === 'STYLE' || node.tagName === 'SCRIPT') {
+    return; // Ignore style and script tags
+  }
+
+  for(var i = 0; i < children.length; i++) {
+    if(children[i].nodeType === 3 ) { // text node
+
+        let fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
+        if (parseInt(fontSize) <= 12
+        && children[i].parentNode.hasAttribute('href')
+        && (children[i].parentNode.getAttribute('href').startsWith('http') || children[i].parentNode.getAttribute('href').includes('.html'))) {
+          children[i].parentNode.style.fontSize = "24px";
+          children[i].parentNode.style.backgroundColor = "red";
+          children[i].parentNode.style.display = "block";
+          children[i].parentNode.style.visibility = "visible";
+          console.log("found link", children[i].parentNode.getAttribute('href'));
+          malicious_link_count ++;
+        }
+        
+        // check if the text node is a countdown
+        if(pureNumber.test(children[i].nodeValue)){
+            if(!oldChildren || (oldChildren[i] && children[i].nodeValue !== oldChildren[i].nodeValue)) {
+                let aimNode = children[i].parentNode.parentNode;
+                let allTexts = extractAllTextNodes(aimNode).join(''); // get all text nodes in the same level
+                
+                if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
+                    children[i].parentNode.parentNode.style.backgroundColor = "red";
+                    console.log("found countdown", allTexts);
+                    countdown_value++;
+                }
+            }
+        }
+    }
+    
+    if (oldChildren[i]) {
+      traverseDOM(oldChildren[i], children[i]);
+    }
+  }
+}
+
+// extract all text nodes in the same level of element
+function extractAllTextNodes(element, result = []) {
+    let children = element.childNodes;
+
+    for (let i = 0; i < children.length; i++) {
+        let child = children[i];
+
+        if (child.nodeType === 3) { // if it is a text node
+            result.push(child.nodeValue);
+        } else if (child.nodeType === 1) { // if it is an element node
+            extractAllTextNodes(child, result);
+        }
+    }
+
+    return result;
+}
