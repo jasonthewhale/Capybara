@@ -1,25 +1,28 @@
 {
-    "manifest_version": 3,
-    "name": "test",
-    "description": "a new test",
-    "version": "1.0",
-    "permissions": ["activeTab", "storage", "scripting", "tabs"],
-    "icons" : {
-        "16": "images/capybara.png",
-        "48": "images/capybara.png"
-    },
-    "action": {
-        "default_title": "Click to view a popup",
-        "default_popup": "popup.html"
-    },
-    "content_scripts": [
-      {
-        "matches": ["<all_urls>"],
-        "js": ["content.js", "popup.js"],
-        "css": ["content.css"]
-      }
-    ],
-    "background": {
-        "service_worker": "background.js"
+  "manifest_version": 3,
+  "name": "Dark design detector",
+  "version": "1.0",
+  "description": "Detects dark design in shopping website.",
+  "icons": {
+      "16": "images/16-capy.png",
+      "32": "images/32-capy.png",
+      "48": "images/48-capy.png",
+      "128": "images/128-capy.png",
+      "512": "images/512-capy.png"
+  },
+  "permissions": ["activeTab", "storage", "scripting", "tabs"],
+  "action": {
+      "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js", "popup.js"],
+      "css": ["content.css"]
     }
+  ],
+  "background": {
+      "service_worker": "background.js"
+  }
 }
+

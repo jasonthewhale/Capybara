@@ -183,60 +183,7 @@ window.onload = function() {
         ) {
             console.log('centered popup:', element);
 
-            //element.style.border = '5px outset blue';
-
-            const cornerSize = '5px solid black';
-
-            const cornerOffset = '0px';
-        
-            const cornerStyle = `
-                position: absolute;
-                width: 10px;
-                height: 10px;
-                z-index: 9999999;
-                !important;
-            `;
-        
-            const topLeftCorner = document.createElement('div');
-            topLeftCorner.style = `
-                ${cornerStyle}
-                top: ${cornerOffset};
-                left: ${cornerOffset};
-                border-left: ${cornerSize};
-                border-top: ${cornerSize};
-            `;
-        
-            const topRightCorner = document.createElement('div');
-            topRightCorner.style = `
-                ${cornerStyle}
-                top: ${cornerOffset};
-                right: ${cornerOffset};
-                border-right: ${cornerSize};
-                border-top: ${cornerSize};
-            `;
-        
-            const bottomLeftCorner = document.createElement('div');
-            bottomLeftCorner.style = `
-                ${cornerStyle}
-                bottom: ${cornerOffset};
-                left: ${cornerOffset};
-                border-left: ${cornerSize};
-                border-bottom: ${cornerSize};
-            `;
-        
-            const bottomRightCorner = document.createElement('div');
-            bottomRightCorner.style = `
-                ${cornerStyle}
-                bottom: ${cornerOffset};
-                right: ${cornerOffset};
-                border-right: ${cornerSize};
-                border-bottom: ${cornerSize};
-            `;
-        
-            element.appendChild(topLeftCorner);
-            element.appendChild(topRightCorner);
-            element.appendChild(bottomLeftCorner);
-            element.appendChild(bottomRightCorner);
+            
 
             centeredPopupFound = true;
             return;
@@ -251,6 +198,60 @@ window.onload = function() {
     
 };
 
+// add cornerborder to the corresponding element
+function addCornerBorder(element) {
+    const cornerSize = '5px solid black';
+    const cornerOffset = '0px';
+
+    const cornerStyle = `
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        z-index: 9999999;
+        !important;
+    `;
+
+    const topLeftCorner = document.createElement('div');
+    topLeftCorner.style = `
+        ${cornerStyle}
+        top: ${cornerOffset};
+        left: ${cornerOffset};
+        border-left: ${cornerSize};
+        border-top: ${cornerSize};
+    `;
+
+    const topRightCorner = document.createElement('div');
+    topRightCorner.style = `
+        ${cornerStyle}
+        top: ${cornerOffset};
+        right: ${cornerOffset};
+        border-right: ${cornerSize};
+        border-top: ${cornerSize};
+    `;
+
+    const bottomLeftCorner = document.createElement('div');
+    bottomLeftCorner.style = `
+        ${cornerStyle}
+        bottom: ${cornerOffset};
+        left: ${cornerOffset};
+        border-left: ${cornerSize};
+        border-bottom: ${cornerSize};
+    `;
+
+    const bottomRightCorner = document.createElement('div');
+    bottomRightCorner.style = `
+        ${cornerStyle}
+        bottom: ${cornerOffset};
+        right: ${cornerOffset};
+        border-right: ${cornerSize};
+        border-bottom: ${cornerSize};
+    `;
+
+    element.appendChild(topLeftCorner);
+    element.appendChild(topRightCorner);
+    element.appendChild(bottomLeftCorner);
+    element.appendChild(bottomRightCorner);
+}
 
 // pop up button
 function toggleFloatingButton() {
