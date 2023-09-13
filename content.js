@@ -318,19 +318,68 @@ function traverseDOM(oldNode, node) {
   }
 
   for(var i = 0; i < children.length; i++) {
-    if(children[i].nodeType === 3 ) { // text node
 
-        let fontSize = window.getComputedStyle(children[i].parentNode, null).getPropertyValue('font-size');
-        if (parseInt(fontSize) <= 12
-        && children[i].parentNode.hasAttribute('href')
-        && (children[i].parentNode.getAttribute('href').startsWith('http') || children[i].parentNode.getAttribute('href').includes('.html'))) {
-          children[i].parentNode.style.fontSize = "24px";
-          children[i].parentNode.style.backgroundColor = "red";
-          children[i].parentNode.style.display = "block";
-          children[i].parentNode.style.visibility = "visible";
-          console.log("found link", children[i].parentNode.getAttribute('href'));
-          malicious_link_count ++;
+    /**
+     * If the node is an element node, the nodeType property will return 1.
+     * If the node is an attribute node, the nodeType property will return 2.
+     * If the node is a text node, the nodeType property will return 3.
+     */
+
+    const catchHidden = (node) => {
+        /**
+         * Some extra conditions to check
+         * 
+         * 1. Similarity of color and bgColor:
+         *      let bgCol = children[i].parentNode.style.backgroundColor;
+         *      let col = children[i].style.color;
+         *      let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
+         * 2. The nearest parent className
+         *      isFooter(childNode)
+         * 3. Opacity (threshold as 0.5, [0, 1] => [transparent, opaque])
+         */
+        // This is your current filter processing on node
+        let style = window.getComputedStyle(node.parentNode, null)
+        let parentStyle = window.getComputedStyle(node.parentNode.parentNode, null)
+        let fontSize = style.getPropertyValue('font-size');
+        fontSize = parseFloat(fontSize);
+        if (fontSize <= 12
+            && node.nodeType === 3
+            && match_hidden(node.nodeValue)
+            && node.parentNode.tagName !== 'STYLE' 
+            && node.parentNode.tagName !== 'SCRIPT') {
+            console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`);
+            node.parentNode.style.color = "red";
+            node.parentNode.style.display = "block";
+            node.parentNode.style.visibility = "visible";
+            // Add black border to hidden text
+            labelPattern(node);
+            malicious_link_count ++;
+        };
+        
+        if (style.color && parentStyle.backgroundColor) {
+            let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), getRGBArray(style.color));
+            if (similarity >= 0.9 
+                && similarity < 1
+                && node.parentNode.tagName === 'A') {
+                console.log(`Found similar colour, className: ${node.className}, fontSize: ${fontSize}, similarity: ${similarity}`);
+                // Add black border to hidden text
+                labelPattern(node);
+            }
+        };
+
+        // if (node.parentNode.hasAttribute('href')
+        //     && (children[i].parentNode.getAttribute('href').startsWith('http')
+        //     || node.getAttribute('href').includes('.html')))
+
+        if (node.hasChildNodes()){
+            for(let child of node.childNodes){
+                catchHidden(child);
+            }
         }
+    };
+    catchHidden(children[i])
+
+    if(children[i].nodeType === 3 ) { // text node
         
         // check if the text node is a countdown
         if(pureNumber.test(children[i].nodeValue)){
@@ -347,6 +396,7 @@ function traverseDOM(oldNode, node) {
         }
     }
     
+    // recursively traverse the DOM tree
     if (oldChildren[i]) {
       traverseDOM(oldChildren[i], children[i]);
     }
@@ -369,3 +419,84 @@ function extractAllTextNodes(element, result = []) {
 
     return result;
 }
+
+// Helper function to calculate the similarity between two colArrs
+function colorSimilarityNormalized(rgb1, rgb2) {
+    let rDiff = rgb1[0] - rgb2[0];
+    let gDiff = rgb1[1] - rgb2[1];
+    let bDiff = rgb1[2] - rgb2[2];
+    let maxEuclideanDist = Math.sqrt(Math.pow(255, 2) * 3);
+    let dist = Math.sqrt(Math.pow(rDiff,2) + Math.pow(gDiff,2) + Math.pow(bDiff,2));
+    // Range of similarity is [0, 1]
+    return 1 - (dist / maxEuclideanDist);
+}
+
+// Helper function to fetch rgb values from a color string
+function getRGBArray(colorStr) {
+    // Remove "rgb(", "rgba(", ")" and spaces,
+    // then split into an array with the red, green, and blue values
+    let colorArr = colorStr.replace(/rgba?\(|\)|\s/g, '').split(',');
+    // Convert the color values to numbers
+    colorArr = colorArr.map(numStr => Number(numStr));
+    // If the colorStr was in "rgba" format, remove the alpha value
+    if (colorArr.length > 3) colorArr.pop();
+    return colorArr;
+}
+
+// Helper function to get formatted iframe from iframe text
+function getIframe(textIframe) {
+    let parser = new DOMParser();
+    let dom = parser.parseFromString(textIframe, 'text/html');
+    return dom.querySelector('iframe');
+}
+
+// Fetch the nearest parent className
+function _recurClassNameFinder(childNode) {
+    if (childNode.parentNode && childNode.parentNode.className instanceof String && childNode.parentNode.className !== null) {
+        return childNode.parentNode.className;
+    } else if (childNode.parentNode) {
+        return _recurClassNameFinder(childNode.parentNode);
+    } else {
+        return null;
+    }
+}
+
+// Check if the node is in the footer (Unable to catch Temu since its className is a mess)
+function isFooter(childNode) {
+    let className = _recurClassNameFinder(childNode);
+    if (className === null) {
+        console.log('className is null');
+        return false;
+    }
+    className = className.toLowerCase();
+    className = _recurClassNameFinder(childNode).toLowerCase();
+    if (typeof className !== 'string') {
+        console.log(`${className} is not a string`)
+        return true;
+    }
+    let ftKeyWords = ['ft', 'nav', 'footer'];
+    return ftKeyWords.find(keyword => className.includes(keyword));
+}
+
+// Standardize the style of border
+function labelPattern(childNode) {
+    childNode.parentNode.style.border = 'solid black';
+    childNode.parentNode.style.borderWidth = '3px';
+}
+
+// Standardize the style of highlight
+function highlightPattern(childNode) {
+    childNode.parentNode.style.backgroundColor = 'yellow';
+    childNode.parentNode.style.color = 'red';
+}
+
+
+function match_hidden(nodeValue) {
+    let hidden_trigger = ['offer', 'promotion', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'cancel', 'pay'];
+    return hidden_trigger.some(function(keyword) {
+        let regExp = new RegExp(keyword, "i");
+        if (regExp.test(nodeValue.toLowerCase())) {
+          return true;
+        }
+    });
+} 
