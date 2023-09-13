@@ -183,7 +183,7 @@ window.onload = function() {
         ) {
             console.log('centered popup:', element);
 
-            
+            addCornerBorder(element);
 
             centeredPopupFound = true;
             return;
