@@ -378,7 +378,7 @@ function traverseDOM(oldNode, node) {
             }
         }
     };
-    catchHidden(children[i])
+    //catchHidden(children[i])
 
     if(children[i].nodeType === 3 ) { // text node
         
