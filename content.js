@@ -205,8 +205,8 @@ function addCornerBorder(element) {
 
     const cornerStyle = `
         position: absolute;
-        width: 10px;
-        height: 10px;
+        width: 30px;
+        height: 30px;
         z-index: 9999999;
         !important;
     `;
@@ -247,6 +247,30 @@ function addCornerBorder(element) {
         border-bottom: ${cornerSize};
     `;
 
+    const detectBackground = document.createElement('div');
+    detectBackground.style = `
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 0;
+        left: 0;
+        background-color: blue;
+        opacity: 1;
+        z-index = 999999;
+        !important;
+    `
+    const testElement = document.createElement('div');
+    testElement.style = `
+        position: absolute;
+        height: 30px;
+        width: 30px;
+        background-color: red;
+        top: 300px;
+        left: 50px;
+        z-index = 999999;
+    `
+    document.body.appendChild(detectBackground);
+    detectBackground.appendChild(testElement);
     element.appendChild(topLeftCorner);
     element.appendChild(topRightCorner);
     element.appendChild(bottomLeftCorner);
@@ -326,59 +350,59 @@ function traverseDOM(oldNode, node) {
      * If the node is a text node, the nodeType property will return 3.
      */
 
-    const catchHidden = (node) => {
-        /**
-         * Some extra conditions to check
-         * 
-         * 1. Similarity of color and bgColor:
-         *      let bgCol = children[i].parentNode.style.backgroundColor;
-         *      let col = children[i].style.color;
-         *      let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
-         * 2. The nearest parent className
-         *      isFooter(childNode)
-         * 3. Opacity (threshold as 0.5, [0, 1] => [transparent, opaque])
-         */
-        // This is your current filter processing on node
-        let style = window.getComputedStyle(node.parentNode, null)
-        let parentStyle = window.getComputedStyle(node.parentNode.parentNode, null)
-        let fontSize = style.getPropertyValue('font-size');
-        fontSize = parseFloat(fontSize);
-        if (fontSize <= 12
-            && node.nodeType === 3
-            && match_hidden(node.nodeValue)
-            && node.parentNode.tagName !== 'STYLE' 
-            && node.parentNode.tagName !== 'SCRIPT') {
-            console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`);
-            node.parentNode.style.color = "red";
-            node.parentNode.style.display = "block";
-            node.parentNode.style.visibility = "visible";
-            // Add black border to hidden text
-            labelPattern(node);
-            malicious_link_count ++;
-        };
+    // const catchHidden = (node) => {
+    //     /**
+    //      * Some extra conditions to check
+    //      * 
+    //      * 1. Similarity of color and bgColor:
+    //      *      let bgCol = children[i].parentNode.style.backgroundColor;
+    //      *      let col = children[i].style.color;
+    //      *      let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
+    //      * 2. The nearest parent className
+    //      *      isFooter(childNode)
+    //      * 3. Opacity (threshold as 0.5, [0, 1] => [transparent, opaque])
+    //      */
+    //     // This is your current filter processing on node
+    //     let style = window.getComputedStyle(node.parentNode, null)
+    //     let parentStyle = window.getComputedStyle(node.parentNode.parentNode, null)
+    //     let fontSize = style.getPropertyValue('font-size');
+    //     fontSize = parseFloat(fontSize);
+    //     if (fontSize <= 12
+    //         && node.nodeType === 3
+    //         && match_hidden(node.nodeValue)
+    //         && node.parentNode.tagName !== 'STYLE' 
+    //         && node.parentNode.tagName !== 'SCRIPT') {
+    //         console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`);
+    //         node.parentNode.style.color = "red";
+    //         node.parentNode.style.display = "block";
+    //         node.parentNode.style.visibility = "visible";
+    //         // Add black border to hidden text
+    //         labelPattern(node);
+    //         // malicious_link_count ++;
+    //     };
         
-        if (style.color && parentStyle.backgroundColor) {
-            let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), getRGBArray(style.color));
-            if (similarity >= 0.9 
-                && similarity < 1
-                && node.parentNode.tagName === 'A') {
-                console.log(`Found similar colour, className: ${node.className}, fontSize: ${fontSize}, similarity: ${similarity}`);
-                // Add black border to hidden text
-                labelPattern(node);
-            }
-        };
+    //     if (style.color && parentStyle.backgroundColor) {
+    //         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), getRGBArray(style.color));
+    //         if (similarity >= 0.9 
+    //             && similarity < 1
+    //             && node.parentNode.tagName === 'A') {
+    //             console.log(`Found similar colour, className: ${node.className}, fontSize: ${fontSize}, similarity: ${similarity}`);
+    //             // Add black border to hidden text
+    //             labelPattern(node);
+    //         }
+    //     };
 
-        // if (node.parentNode.hasAttribute('href')
-        //     && (children[i].parentNode.getAttribute('href').startsWith('http')
-        //     || node.getAttribute('href').includes('.html')))
+    //     // if (node.parentNode.hasAttribute('href')
+    //     //     && (children[i].parentNode.getAttribute('href').startsWith('http')
+    //     //     || node.getAttribute('href').includes('.html')))
 
-        if (node.hasChildNodes()){
-            for(let child of node.childNodes){
-                catchHidden(child);
-            }
-        }
-    };
-    catchHidden(children[i])
+    //     if (node.hasChildNodes()){
+    //         for(let child of node.childNodes){
+    //             catchHidden(child);
+    //         }
+    //     }
+    // };
+    // catchHidden(children[i])
 
     if(children[i].nodeType === 3 ) { // text node
         
