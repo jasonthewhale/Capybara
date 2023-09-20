@@ -12,15 +12,20 @@ const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|m
 // regex for not countdown
 const notCountdown = /(?:\d{1,2}\s*:\s*){4,}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){5,}/gi;
 
+// Get the current URL
+const currentPageURL = window.location.href;
+const countdownValues = {}; 
+countdownValues[currentPageURL] = 0;
+
+// List of keywords to check for
+const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher'];
+
+// Add a flag to track if a centered popup has been found
+let centeredPopupFound = false; 
+
+var imageUrl = chrome.runtime.getURL('images/floating_background.png');
+
 window.onload = function() {
-    // Get the current URL
-    const currentPageURL = window.location.href;
-    const countdownValues = {}; 
-    countdownValues[currentPageURL] = 0;
-
-    // List of keywords to check for
-    const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher'];
-
     // Get all form inputs (checkboxes and radio buttons)
     const formInputs = document.querySelectorAll('input');
 
@@ -53,7 +58,6 @@ window.onload = function() {
 
     });
 
-
     // Create a new MutationObserver instance
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -73,6 +77,7 @@ window.onload = function() {
                 const currentDisplay = getDisplayValue(currentStyle, currentClass);
 
                 if (previousDisplay !== currentDisplay) {
+                    console.log("hidden", previousDisplay, currentDisplay);
                     analyzeNodeForPopUp(target);
                 }
             }
@@ -95,108 +100,107 @@ window.onload = function() {
     const config = { attributes: true, attributeOldValue: true, childList: true, subtree: true, attributeFilter: ['style', 'class'] };
 
     // Start observing the DOM with the given configuration
-    observer.observe(document.body, config);
-
-    function analyzeNodeForPopUp(node) {
-        if (node instanceof HTMLElement) {
-            var textContent = node.textContent.toLowerCase();
-            const foundKeyword = keywords.find(keyword => textContent.includes(keyword));
-            var includesImg;
-
-            if (node instanceof HTMLIFrameElement) {
-                node.addEventListener('DOMContentLoaded', function() {
-                    const iframeBody = node.contentWindow.document.body;
-
-                    console.log(iframeBody, iframeBody.firstChild);      
-                });
-
-            }
-
-            // Check for overlay behavior
-            if(isElementOverlaying(node) && (foundKeyword || includesImg)) {
-                console.log('Potential pop-up behavior: overlaying', node);
-                centeredPopupFound = false;
-                findCenteredPopup(node);
-            };
-
-            // Check if the node manipulates cookies or local storage
-            // if (node instanceof HTMLElement) {
-            //     const attributes = node.attributes;
-            //     for (let i = 0; i < attributes.length; i++) {
-            //         const attributeName = attributes[i].name.toLowerCase();
-            //         if (attributeName.includes('cookie') || attributeName.includes('localStorage')) {
-            //             console.log('Node with potential cookie-related behavior:', node);
-            //         }
-            //     }
-            // }
-        }
-    };
-
-
-    function isElementOverlaying(element) {
-        const rect = element.getBoundingClientRect();
-        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    
-        // Define a threshold for overlap (e.g., 50% of the viewport)
-        const overlapThreshold = 0.5;
-    
-        // Calculate the area of intersection with the viewport
-        const intersectionArea = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0)) *
-            Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
-    
-        // Calculate the area of the element
-        const elementArea = rect.width * rect.height;
-    
-        // Determine if the element covers a significant portion of the viewport
-        return rect.width >= viewportWidth && rect.height >= viewportHeight && intersectionArea / elementArea >= overlapThreshold;
-    }
-
-
-    function getDisplayValue(styleString, classString) {
-        const styleMatch = styleString && styleString.match(/(?:^|\s)display:\s*([^;]*)(?:;|$)/i);
-        const classMatch = classString && classString.match(/(?:^|\s)display:\s*([^;]*)(?:;|$)/i);
-        
-        return styleMatch ? styleMatch[1] : classMatch ? classMatch[1] : null;
-    }
-
-    let centeredPopupFound = false; // Add a flag to track if a centered popup has been found
-    function findCenteredPopup(element) {
-        if (centeredPopupFound) return; 
-
-        // Get the position and size information of the element
-        const boundingBox = element.getBoundingClientRect();
-    
-        // Get the width and height of the viewport
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-    
-        // Define a margin value
-        const margin = 20;
-    
-        // Check if the element is centered with the margin
-        if (
-            Math.abs(boundingBox.left + boundingBox.width / 2 - viewportWidth / 2) < margin &&
-            Math.abs(boundingBox.top + boundingBox.height / 2 - viewportHeight / 2) < margin &&
-            boundingBox.height < viewportHeight * 0.8 &&
-            boundingBox.width < viewportWidth * 0.7
-        ) {
-            console.log('centered popup:', element);
-
-            addCornerBorder(element);
-
-            centeredPopupFound = true;
-            return;
-        }
-    
-        // Recursively iterate through child div elements
-        const childDivs = element.querySelectorAll('div');
-        for (const childDiv of childDivs) {
-            findCenteredPopup(childDiv);
-        }
-    }  
+    observer.observe(document.body, config); 
     
 };
+
+function analyzeNodeForPopUp(node) {
+    if (node instanceof HTMLElement) {
+        var textContent = node.textContent.toLowerCase();
+        const foundKeyword = keywords.find(keyword => textContent.includes(keyword));
+        var includesImg;
+
+        if (node instanceof HTMLIFrameElement) {
+            node.addEventListener('DOMContentLoaded', function() {
+                const iframeBody = node.contentWindow.document.body;
+
+                console.log(iframeBody, iframeBody.firstChild);      
+            });
+
+        }
+
+        // Check for overlay behavior
+        if(isElementOverlaying(node) && (foundKeyword || includesImg)) {
+            console.log('Potential pop-up behavior: overlaying', node);
+            centeredPopupFound = false;
+            findCenteredPopup(node);
+        };
+
+        // Check if the node manipulates cookies or local storage
+        // if (node instanceof HTMLElement) {
+        //     const attributes = node.attributes;
+        //     for (let i = 0; i < attributes.length; i++) {
+        //         const attributeName = attributes[i].name.toLowerCase();
+        //         if (attributeName.includes('cookie') || attributeName.includes('localStorage')) {
+        //             console.log('Node with potential cookie-related behavior:', node);
+        //         }
+        //     }
+        // }
+    }
+};
+
+// Check if the element is overlaying
+function isElementOverlaying(element) {
+    const rect = element.getBoundingClientRect();
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+    // Define a threshold for overlap
+    const overlapThreshold = 0.5;
+
+    // Calculate the area of intersection with the viewport
+    const intersectionArea = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0)) *
+        Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+
+    // Calculate the area of the element
+    const elementArea = rect.width * rect.height;
+
+    // Determine if the element covers a significant portion of the viewport
+    return rect.width >= viewportWidth && rect.height >= viewportHeight && intersectionArea / elementArea >= overlapThreshold;
+}
+
+
+function getDisplayValue(styleString, classString) {
+    const styleMatch = styleString && styleString.match(/(?:^|\s)display:\s*([^;]*)(?:;|$)/i);
+    const classMatch = classString && classString.match(/(?:^|\s)display:\s*([^;]*)(?:;|$)/i);
+    
+    return styleMatch ? styleMatch[1] : classMatch ? classMatch[1] : null;
+}
+
+function findCenteredPopup(element) {
+    if (centeredPopupFound) return; 
+
+    // Get the position and size information of the element
+    const boundingBox = element.getBoundingClientRect();
+
+    // Get the width and height of the viewport
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Define a margin value
+    const margin = 20;
+
+    // Check if the element is centered with the margin
+    if (
+        Math.abs(boundingBox.left + boundingBox.width / 2 - viewportWidth / 2) < margin &&
+        Math.abs(boundingBox.top + boundingBox.height / 2 - viewportHeight / 2) < margin &&
+        boundingBox.height < viewportHeight * 0.8 &&
+        boundingBox.width < viewportWidth * 0.7
+    ) {
+        console.log('centered popup:', element);
+
+        addCornerBorder(element);
+
+        centeredPopupFound = true;
+        return;
+    }
+
+    // Recursively iterate through child div elements
+    const childDivs = element.querySelectorAll('div');
+    for (const childDiv of childDivs) {
+        findCenteredPopup(childDiv);
+    }
+} 
 
 // add cornerborder to the corresponding element
 function addCornerBorder(element) {
@@ -269,8 +273,8 @@ function addCornerBorder(element) {
         left: 50px;
         z-index = 999999;
     `
-    document.body.appendChild(detectBackground);
-    detectBackground.appendChild(testElement);
+    // document.body.appendChild(detectBackground);
+    // detectBackground.appendChild(testElement);
     element.appendChild(topLeftCorner);
     element.appendChild(topRightCorner);
     element.appendChild(bottomLeftCorner);
@@ -284,9 +288,24 @@ function toggleFloatingButton() {
     if (existingButton) {
         existingButton.remove();
     } else {
-        const button = document.createElement('button');
+        const button = document.createElement('div');
+        const leftBtn = document.createElement('button');
+        const rightBtn = document.createElement('button');
+        const close = document.createElement('button');
+        const num = document.createElement('p');
+        const type = document.createElement('p');
+
+        leftBtn.classList.add('left-btn');
+        rightBtn.classList.add('right-btn');
+        num.classList.add('total-count');
+        type.classList.add('type');
+        close.classList.add('close');
+
         button.classList.add('floating-button');
-        button.textContent = 'Floating';
+        leftBtn.innerText = '22';
+        num.innerText = '23';
+        rightBtn.innerText = '24';
+        type.innerText = 'countdown';
 
         button.style.position = 'fixed';
         button.style.bottom = '20px'; 
@@ -321,6 +340,15 @@ function toggleFloatingButton() {
         });
 
         document.body.appendChild(button);
+        button.appendChild(close);
+        button.appendChild(num);
+        button.appendChild(leftBtn);
+        button.appendChild(rightBtn);
+        // button.appendChild(type);
+
+        close.addEventListener('click', function() {
+            button.remove();
+        });
     }
 }
 
