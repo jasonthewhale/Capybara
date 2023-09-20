@@ -11,3 +11,4 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 // Set badge color
 chrome.action.setBadgeBackgroundColor({ color: "#ff0000" });
+
