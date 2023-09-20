@@ -3,10 +3,10 @@ chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
     if (response) {
       updatePopup(response);
     }
-  });
+});
   
-  // Update popup function
-  function updatePopup(data) {
+// Update popup function
+function updatePopup(data) {
     const riskElement = document.getElementById('riskLevel');
     const riskImageElement = document.getElementById('riskImage');
     const countdownElement = document.getElementById('countdownSum');
@@ -26,14 +26,13 @@ chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
       riskElement.style.color = '#f4ea2a';
       riskElement.textContent = "Moderate Risk";
     }
-  }
+}
   
-  // Add click event to toggle floating button
-  document.addEventListener('DOMContentLoaded', () => {
+// add click event to toggle floating
+document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('toggleButton').addEventListener('click', () => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, { command: "toggleFloatingButton" });
-      });
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { command: "toggleFloatingButton" });
+        });
     });
-  });
-  
+});
