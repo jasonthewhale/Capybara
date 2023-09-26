@@ -1,50 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Dark Detector</title>
-    <style>
-      body {
-        width: 200px;
-        margin: 10px;
-      }
-      img {
-        max-width: 75%;
-        
-      }
-      .img-div {
-        text-align: center;
-        
-      }
-      div {
-        margin: 10px;
-        font-size: 500;
-        color: #404040;
-      }
-      h3 {
-        text-align: center;
-      }
-    </style>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,500&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="styles.css">
+      <script src="popup.js"></script>
+      <title>Popup</title>
   </head>
   <body>
+    <div class="container active" id="content1">
 
-    <div class="img-div">
-      <img id="riskImage" src="src/low-risk.png" alt="Risk Level">
-      <h1 id ="riskLevel" style="color: #1296db;">Low Risk</h1>
+      <!-- Top Section -->
+      <div>
+        <button id="toggleButton">BTN</button>
+      </div>
+      <div class="risklevel">
+        <img src="src/world.png" alt="level" class="level" id="riskImage">
+      </div>
+      
+      
+      <div class="top-section">
+        <h1 class="title" id = "riskLevel">Safe</h1>
+        <div class="line"></div>
+        <p class="description" id="riskDesp">This website has been evaluated as safe. Feel confident in browsing.</p>
+      </div>
+
+      <!-- Middle Section -->
+      <div class="middle-section">
+
+        <div class="column" id="column1">
+          <span class="column-title">0</span>
+          <span class="column-description">Description 0</span>
+        </div>
+
+        <div class="column" id="column2">
+          <span class="column-title">0</span>
+          <span class="column-description">Description 1</span>
+        </div>
+
+        <div class="column" id="column3">
+          <span class="column-title">0</span>
+          <span class="column-description">Description 2</span>
+        </div>
+
+        <div class="column" id="column4">
+          <span class="column-title">0</span>
+          <span class="column-description">Description 3</span>
+        </div>
+
+        <div class="column" id="column5">
+          <span class="column-title">0</span>
+          <span class="column-description">Description 4</span>
+        </div>
+
+        <div class="column" id="column6">
+          <span class="column-title">0</span>
+          <span class="column-description">Description 5</span>
+        </div>
+
+      </div>
     </div>
-    
-    <div>
-      <h3 id="name">Detected Dark Design</h3>
-      <p id="type">Type: Countdown</p>
-      <p id="countdownSum"><strong>Sum: 0</strong></p>
-      <p id="type">Type: Hidden information</p>
-      <p id="hiddenSum"><strong>Sum: 0</strong></p>
-      <p id="type">Type: Default checkbox</p>
-      <p id="checkboxSum"><strong>Sum: 0</strong></p>
+    <div class="container" id="content2">
+      <p>Not finished :( </p>
     </div>
-    
-    <button id="toggleButton">Toggle Floating Button</button>
+
+    <!-- Bottom Section -->
+    <div class="tabs">
+      <button class="tab-button active" data-target="content1">Home</button>
+      <button class="tab-button" data-target="content2">Report</button>
+    </div>
+
+    <div class="title-container">
+      <span class="shadow-hunter">Shadow Hunter</span>
+      <span class="for-chrome">For Chrome</span>
+    </div>
+  
   </body>
-  <script src="popup.js"></script>
-
-
 </html>
