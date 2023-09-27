@@ -23,8 +23,9 @@
   left: 15%;
   width: 15px;
   height: 15px;
-  margin: 0;
-  padding: 10px;
+  margin: 0 !important;
+  padding: 10px !important;
+  line-height: 0 !important;
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.737);
 }
@@ -41,8 +42,9 @@
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
   font-size: large;
   font-family: 'Orbitron', sans-serif;
   transition: transform 0.3s;
@@ -65,18 +67,20 @@
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
   font-size: large;
   font-family: 'Orbitron', sans-serif;
 }
 
 .total-count {
   position: absolute;
-  top: 34%;
+  top: 50%;
   left: 40%;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
   font-size: 30px;
 }
 
@@ -84,6 +88,7 @@
   position: absolute;
   top: 62%;
   left: 28%;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
 }

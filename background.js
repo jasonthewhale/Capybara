@@ -1,14 +1,49 @@
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.countdown_value !== undefined && request.malicious_link_count !== undefined) {
-        // Set badge text
-        let total = request.countdown_value + request.malicious_link_count;
-        chrome.action.setBadgeText({ text: total.toString() });
-    }else{
-        // Set default badge text
-        chrome.action.setBadgeText({ text: "0" });
-    }
+let activeTabId = null; // ID of the currently active tab
+let tabData = {}; // Object to store data for each tab
+
+// Listen for changes to the active tab
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  activeTabId = activeInfo.tabId;
+  updateBadgeForActiveTab();
 });
 
-// Set badge color
-chrome.action.setBadgeBackgroundColor({ color: "#ff0000" });
+// Listen for messages from content scripts
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (sender.tab) {
+    const tabId = sender.tab.id;
+    
+    // Store data for each tab
+    tabData[tabId] = {
+      countdown_value: request.countdown_value || 0,
+      malicious_link_count: request.malicious_link_count || 0,
+      prechecked_value: request.prechecked_value || 0,
+    };
 
+    // Update the badge if this is the current active tab
+    if (tabId === activeTabId) {
+      updateBadgeForActiveTab();
+    }
+    sendResponse({ success: true });
+  }
+
+  if (request.action === 'getActiveTabData') {
+    if (activeTabId !== null && tabData.hasOwnProperty(activeTabId)) {
+      sendResponse(tabData[activeTabId]);
+    } else {
+      sendResponse(null);
+    }
+  }
+});
+
+// Update the badge text for the active tab
+function updateBadgeForActiveTab() {
+  if (activeTabId !== null && tabData.hasOwnProperty(activeTabId)) {
+    const total = tabData[activeTabId].countdown_value + tabData[activeTabId].malicious_link_count + tabData[activeTabId].prechecked_value;
+    chrome.action.setBadgeText({ text: total.toString() });
+  } else {
+    chrome.action.setBadgeText({ text: "0" });
+  }
+}
+
+// Set the badge background color
+chrome.action.setBadgeBackgroundColor({ color: "#ff0000" });

@@ -1,8 +1,9 @@
 // calculate the sum of every dark pattern
 let countdown_value = 0;
-let poup_value = 0;
+let popup_value = 0;
 let malicious_link_count = 0;
 let display_count_down_count = 0;
+let prechecked_value = 0;
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -18,7 +19,7 @@ const countdownValues = {};
 countdownValues[currentPageURL] = 0;
 
 // List of keywords to check for
-const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher'];
+const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher', 'reward', 'rewards'];
 
 // Add a flag to track if a centered popup has been found
 let centeredPopupFound = false; 
@@ -31,12 +32,25 @@ window.onload = function() {
 
     // Iterate through form inputs
     formInputs.forEach(input => {
-    if (input.checked) {
+    // Check if the input is visible
+    const isHidden = input.hidden;
+    const isDisplayNone = window.getComputedStyle(input).getPropertyValue('display') === 'none';
+    const rect = input.getBoundingClientRect();
+
+    const isVisible = (
+        rect.top > 0 &&
+        rect.left > 0 &&
+        rect.bottom < (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right < (window.innerWidth || document.documentElement.clientWidth)
+    );
+
+    if (input.checked && !isHidden && !isDisplayNone && isVisible) {
         // Highlight the preselected input label
         const label = document.querySelector(`label[for="${input.id}"]`);
-        console.log(input);
+        console.log(input, rect);
+        prechecked_value++;
         if (label) {
-            label.style.backgroundColor = 'yellow';
+            addCornerBorder(label);
         }
     }
 
@@ -58,13 +72,15 @@ window.onload = function() {
 
     });
 
+    handleOverlaying(document.body);
+    
     // Create a new MutationObserver instance
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.type === 'childList') {
                 // Check each added node in the mutation
                 mutation.addedNodes.forEach(function(node) {
-                    analyzeNodeForPopUp(node);
+                    findDeepestOverlayingDiv(node);
                 });
             } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
                 const target = mutation.target;
@@ -77,8 +93,7 @@ window.onload = function() {
                 const currentDisplay = getDisplayValue(currentStyle, currentClass);
 
                 if (previousDisplay !== currentDisplay) {
-                    console.log("hidden", previousDisplay, currentDisplay);
-                    analyzeNodeForPopUp(target);
+                    // findDeepestOverlayingDiv(target);
                 }
             }
         });
@@ -86,13 +101,14 @@ window.onload = function() {
         // Check countdown after every mutation
         countdown_value = 0;
         traverseDOM(oldBody, document.body);
+
         if (display_count_down_count >= countdown_value) {
             countdown_value = display_count_down_count;
         }
         display_count_down_count = countdown_value;
 
-        chrome.runtime.sendMessage({countdown_value: countdown_value, malicious_link_count: malicious_link_count}, function(response) {
-            console.log("checked ", countdown_value, malicious_link_count);
+        chrome.runtime.sendMessage({countdown_value: countdown_value, malicious_link_count: malicious_link_count, prechecked_value: prechecked_value}, function(response) {
+            console.log("checked ", countdown_value, malicious_link_count, prechecked_value);
         });
     });
 
@@ -104,40 +120,33 @@ window.onload = function() {
     
 };
 
-function analyzeNodeForPopUp(node) {
-    if (node instanceof HTMLElement) {
-        var textContent = node.textContent.toLowerCase();
-        const foundKeyword = keywords.find(keyword => textContent.includes(keyword));
-        var includesImg;
+function findDeepestOverlayingDiv(node) {
+    let deepestOverlayingDiv = null;
+  
+    // iterate all child nodes
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const childNode = node.childNodes[i];
+  
+        if (childNode instanceof HTMLElement && !childNode.classList.contains('processed')) {
+            if (isElementOverlaying(childNode)) {
+                // if current node is overlaying，set it as deepest overlaying div
+                deepestOverlayingDiv = childNode;
+            }
 
-        if (node instanceof HTMLIFrameElement) {
-            node.addEventListener('DOMContentLoaded', function() {
-                const iframeBody = node.contentWindow.document.body;
+            const childDeepestOverlayingDiv = findDeepestOverlayingDiv(childNode);
 
-                console.log(iframeBody, iframeBody.firstChild);      
-            });
+            if (childDeepestOverlayingDiv !== null) {
+                // if there is deeper overlaying div，update the deepest overlaying div
+                deepestOverlayingDiv = childDeepestOverlayingDiv;
+            }
 
+            // Add processed class to mark this element has been processed
+            childNode.classList.add('processed');
         }
-
-        // Check for overlay behavior
-        if(isElementOverlaying(node) && (foundKeyword || includesImg)) {
-            console.log('Potential pop-up behavior: overlaying', node);
-            centeredPopupFound = false;
-            findCenteredPopup(node);
-        };
-
-        // Check if the node manipulates cookies or local storage
-        // if (node instanceof HTMLElement) {
-        //     const attributes = node.attributes;
-        //     for (let i = 0; i < attributes.length; i++) {
-        //         const attributeName = attributes[i].name.toLowerCase();
-        //         if (attributeName.includes('cookie') || attributeName.includes('localStorage')) {
-        //             console.log('Node with potential cookie-related behavior:', node);
-        //         }
-        //     }
-        // }
     }
-};
+  
+    return deepestOverlayingDiv;
+}
 
 // Check if the element is overlaying
 function isElementOverlaying(element) {
@@ -146,17 +155,17 @@ function isElementOverlaying(element) {
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
 
     // Define a threshold for overlap
-    const overlapThreshold = 0.5;
+    const overlapThreshold = 0.9;
 
     // Calculate the area of intersection with the viewport
     const intersectionArea = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0)) *
         Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
 
-    // Calculate the area of the element
-    const elementArea = rect.width * rect.height;
+    // Calculate the area of the viewport
+    const viewportArea = viewportWidth * viewportHeight;
 
     // Determine if the element covers a significant portion of the viewport
-    return rect.width >= viewportWidth && rect.height >= viewportHeight && intersectionArea / elementArea >= overlapThreshold;
+    return rect.width >= viewportWidth && rect.height >= viewportHeight && intersectionArea / viewportArea >= overlapThreshold;
 }
 
 
@@ -167,8 +176,21 @@ function getDisplayValue(styleString, classString) {
     return styleMatch ? styleMatch[1] : classMatch ? classMatch[1] : null;
 }
 
+function handleOverlaying(element) {
+    let deepestOverlayingDiv = findDeepestOverlayingDiv(element);
+    if (deepestOverlayingDiv !== null) {
+        console.log("deepest overlaying: ", deepestOverlayingDiv);
+        centeredPopupFound = false;
+        findCenteredPopup(deepestOverlayingDiv);
+    }
+}
+
 function findCenteredPopup(element) {
     if (centeredPopupFound) return; 
+    
+    var textContent = element.textContent.toLowerCase();
+    const foundKeyword = keywords.find(keyword => textContent.includes(keyword));
+    var includesImg;
 
     // Get the position and size information of the element
     const boundingBox = element.getBoundingClientRect();
@@ -185,13 +207,14 @@ function findCenteredPopup(element) {
         Math.abs(boundingBox.left + boundingBox.width / 2 - viewportWidth / 2) < margin &&
         Math.abs(boundingBox.top + boundingBox.height / 2 - viewportHeight / 2) < margin &&
         boundingBox.height < viewportHeight * 0.8 &&
-        boundingBox.width < viewportWidth * 0.7
+        boundingBox.width < viewportWidth * 0.7 &&
+        (foundKeyword || includesImg)
     ) {
         console.log('centered popup:', element);
 
         addCornerBorder(element);
-
         centeredPopupFound = true;
+        popup_value++;
         return;
     }
 
@@ -204,16 +227,18 @@ function findCenteredPopup(element) {
 
 // add cornerborder to the corresponding element
 function addCornerBorder(element) {
-    const cornerSize = '5px solid black';
+    const cornerSize = '3px solid black';
     const cornerOffset = '0px';
 
     const cornerStyle = `
         position: absolute;
-        width: 30px;
-        height: 30px;
+        width: 8px;
+        height: 8px;
         z-index: 9999999;
         !important;
     `;
+
+    const fragment = document.createDocumentFragment();
 
     const topLeftCorner = document.createElement('div');
     topLeftCorner.style = `
@@ -275,10 +300,12 @@ function addCornerBorder(element) {
     `
     // document.body.appendChild(detectBackground);
     // detectBackground.appendChild(testElement);
-    element.appendChild(topLeftCorner);
-    element.appendChild(topRightCorner);
-    element.appendChild(bottomLeftCorner);
-    element.appendChild(bottomRightCorner);
+    fragment.appendChild(topLeftCorner);
+    fragment.appendChild(topRightCorner);
+    fragment.appendChild(bottomLeftCorner);
+    fragment.appendChild(bottomRightCorner);
+
+    element.appendChild(fragment);
 }
 
 // pop up button
@@ -358,9 +385,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-
-
-
 // loop through all text nodes
 function traverseDOM(oldNode, node) {
   var children = node.childNodes;
@@ -372,66 +396,6 @@ function traverseDOM(oldNode, node) {
 
   for(var i = 0; i < children.length; i++) {
 
-    /**
-     * If the node is an element node, the nodeType property will return 1.
-     * If the node is an attribute node, the nodeType property will return 2.
-     * If the node is a text node, the nodeType property will return 3.
-     */
-
-    // const catchHidden = (node) => {
-    //     /**
-    //      * Some extra conditions to check
-    //      * 
-    //      * 1. Similarity of color and bgColor:
-    //      *      let bgCol = children[i].parentNode.style.backgroundColor;
-    //      *      let col = children[i].style.color;
-    //      *      let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
-    //      * 2. The nearest parent className
-    //      *      isFooter(childNode)
-    //      * 3. Opacity (threshold as 0.5, [0, 1] => [transparent, opaque])
-    //      */
-    //     // This is your current filter processing on node
-    //     let style = window.getComputedStyle(node.parentNode, null)
-    //     let parentStyle = window.getComputedStyle(node.parentNode.parentNode, null)
-    //     let fontSize = style.getPropertyValue('font-size');
-    //     fontSize = parseFloat(fontSize);
-    //     if (fontSize <= 12
-    //         && node.nodeType === 3
-    //         && match_hidden(node.nodeValue)
-    //         && node.parentNode.tagName !== 'STYLE' 
-    //         && node.parentNode.tagName !== 'SCRIPT') {
-    //         console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`);
-    //         node.parentNode.style.color = "red";
-    //         node.parentNode.style.display = "block";
-    //         node.parentNode.style.visibility = "visible";
-    //         // Add black border to hidden text
-    //         labelPattern(node);
-    //         // malicious_link_count ++;
-    //     };
-        
-    //     if (style.color && parentStyle.backgroundColor) {
-    //         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), getRGBArray(style.color));
-    //         if (similarity >= 0.9 
-    //             && similarity < 1
-    //             && node.parentNode.tagName === 'A') {
-    //             console.log(`Found similar colour, className: ${node.className}, fontSize: ${fontSize}, similarity: ${similarity}`);
-    //             // Add black border to hidden text
-    //             labelPattern(node);
-    //         }
-    //     };
-
-    //     // if (node.parentNode.hasAttribute('href')
-    //     //     && (children[i].parentNode.getAttribute('href').startsWith('http')
-    //     //     || node.getAttribute('href').includes('.html')))
-
-    //     if (node.hasChildNodes()){
-    //         for(let child of node.childNodes){
-    //             catchHidden(child);
-    //         }
-    //     }
-    // };
-    // catchHidden(children[i])
-
     if(children[i].nodeType === 3 ) { // text node
         
         // check if the text node is a countdown
@@ -442,6 +406,7 @@ function traverseDOM(oldNode, node) {
                 
                 if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
                     children[i].parentNode.parentNode.style.backgroundColor = "red";
+                    // addCornerBorder(children[i].parentNode.parentNode);
                     console.log("found countdown", allTexts);
                     countdown_value++;
                 }
