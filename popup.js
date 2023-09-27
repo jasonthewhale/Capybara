@@ -9,9 +9,11 @@ chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
 function updatePopup(data) {
     let countdown_value = data.countdown_value;
     let malicious_link_value = data.malicious_link_count;
+    let prechecked_value = data.prechecked_value;
     let darkpatterns = [
         {name:'countdown', value: countdown_value},
-        {name:'hidden info', value: malicious_link_value}
+        {name:'hidden info', value: malicious_link_value},
+        {name:'preselected', value: prechecked_value}
     ]
     darkpatterns.sort((a, b) => b.value - a.value);
 
@@ -54,14 +56,14 @@ function updatePopup(data) {
 
   
     // Set risk level
-    if ((countdown_value + malicious_link_value) > 50) {
+    if ((countdown_value + malicious_link_value + prechecked_value) > 50) {
         riskImageElement.src = 'src/alien.png';
         riskElement.textContent = "Dangerous";
         riskDesp.textContent = "This website has been flagged as dangerous. It poses significant risks to your online safety.";
         colorElement.style.background = 'linear-gradient(to bottom, #ff914d,#ff3131)';
         changeGradientBgColor('ff914d','ff3131');
       
-    } else if ((countdown_value + malicious_link_value) > 5) {
+    } else if ((countdown_value + malicious_link_value + prechecked_value) > 5) {
         riskImageElement.src = 'src/star.png';
         riskElement.textContent = "Attention";
         riskDesp.textContent = "This website has been evaluated as risky. Be mindful of sharing sensitive information.";

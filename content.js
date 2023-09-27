@@ -80,7 +80,7 @@ window.onload = function() {
             if (mutation.type === 'childList') {
                 // Check each added node in the mutation
                 mutation.addedNodes.forEach(function(node) {
-                    findDeepestOverlayingDiv(node);
+                   handleOverlaying(node);
                 });
             } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
                 const target = mutation.target;
@@ -93,7 +93,7 @@ window.onload = function() {
                 const currentDisplay = getDisplayValue(currentStyle, currentClass);
 
                 if (previousDisplay !== currentDisplay) {
-                    // findDeepestOverlayingDiv(target);
+                    handleOverlaying(target);
                 }
             }
         });
@@ -395,6 +395,66 @@ function traverseDOM(oldNode, node) {
   }
 
   for(var i = 0; i < children.length; i++) {
+
+        /**
+     * If the node is an element node, the nodeType property will return 1.
+     * If the node is an attribute node, the nodeType property will return 2.
+     * If the node is a text node, the nodeType property will return 3.
+     */
+
+    // const catchHidden = (node) => {
+    //     /**
+    //      * Some extra conditions to check
+    //      * 
+    //      * 1. Similarity of color and bgColor:
+    //      *      let bgCol = children[i].parentNode.style.backgroundColor;
+    //      *      let col = children[i].style.color;
+    //      *      let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
+    //      * 2. The nearest parent className
+    //      *      isFooter(childNode)
+    //      * 3. Opacity (threshold as 0.5, [0, 1] => [transparent, opaque])
+    //      */
+    //     // This is your current filter processing on node
+    //     let style = window.getComputedStyle(node.parentNode, null)
+    //     let parentStyle = window.getComputedStyle(node.parentNode.parentNode, null)
+    //     let fontSize = style.getPropertyValue('font-size');
+    //     fontSize = parseFloat(fontSize);
+    //     if (fontSize <= 12
+    //         && node.nodeType === 3
+    //         && match_hidden(node.nodeValue)
+    //         && node.parentNode.tagName !== 'STYLE' 
+    //         && node.parentNode.tagName !== 'SCRIPT') {
+    //         console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`);
+    //         node.parentNode.style.color = "red";
+    //         node.parentNode.style.display = "block";
+    //         node.parentNode.style.visibility = "visible";
+    //         // Add black border to hidden text
+    //         labelPattern(node);
+    //         // malicious_link_count ++;
+    //     };
+        
+    //     if (style.color && parentStyle.backgroundColor) {
+    //         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), getRGBArray(style.color));
+    //         if (similarity >= 0.9 
+    //             && similarity < 1
+    //             && node.parentNode.tagName === 'A') {
+    //             console.log(`Found similar colour, className: ${node.className}, fontSize: ${fontSize}, similarity: ${similarity}`);
+    //             // Add black border to hidden text
+    //             labelPattern(node);
+    //         }
+    //     };
+
+    //     // if (node.parentNode.hasAttribute('href')
+    //     //     && (children[i].parentNode.getAttribute('href').startsWith('http')
+    //     //     || node.getAttribute('href').includes('.html')))
+
+    //     if (node.hasChildNodes()){
+    //         for(let child of node.childNodes){
+    //             catchHidden(child);
+    //         }
+    //     }
+    // };
+    // catchHidden(children[i])
 
     if(children[i].nodeType === 3 ) { // text node
         
