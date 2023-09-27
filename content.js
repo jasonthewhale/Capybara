@@ -127,7 +127,7 @@ function findDeepestOverlayingDiv(node) {
     for (let i = 0; i < node.childNodes.length; i++) {
       const childNode = node.childNodes[i];
   
-        if (childNode instanceof HTMLElement && !childNode.classList.contains('processed')) {
+        if (childNode instanceof HTMLElement && !childNode.classList.contains('processed') && childNode.childNodes.length > 0) {
             if (isElementOverlaying(childNode)) {
                 // if current node is overlaying，set it as deepest overlaying div
                 deepestOverlayingDiv = childNode;
@@ -138,13 +138,14 @@ function findDeepestOverlayingDiv(node) {
             if (childDeepestOverlayingDiv !== null) {
                 // if there is deeper overlaying div，update the deepest overlaying div
                 deepestOverlayingDiv = childDeepestOverlayingDiv;
+                console.log('1:', deepestOverlayingDiv);
             }
 
             // Add processed class to mark this element has been processed
             childNode.classList.add('processed');
         }
     }
-  
+
     return deepestOverlayingDiv;
 }
 
@@ -177,7 +178,7 @@ function getDisplayValue(styleString, classString) {
 }
 
 function handleOverlaying(element) {
-    let deepestOverlayingDiv = findDeepestOverlayingDiv(element);
+    var deepestOverlayingDiv = findDeepestOverlayingDiv(element);
     if (deepestOverlayingDiv !== null) {
         console.log("deepest overlaying: ", deepestOverlayingDiv);
         centeredPopupFound = false;
