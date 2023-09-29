@@ -105,6 +105,7 @@ body {
     color: #fff;
     padding: 7px;
     justify-content: flex-end;
+    cursor: pointer;
 }
 
 .gradient-bg {

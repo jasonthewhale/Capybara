@@ -77,7 +77,9 @@
 .total-count {
   position: absolute;
   top: 50%;
-  left: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
   margin: 0 !important;
   padding: 0 !important;
   line-height: 0 !important;
@@ -86,8 +88,10 @@
 
 .type {
   position: absolute;
-  top: 62%;
-  left: 28%;
+  top: 70%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
   margin: 0 !important;
   padding: 0 !important;
   line-height: 0 !important;

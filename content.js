@@ -7,6 +7,8 @@ let prechecked_value = 0;
 let totalValue;
 let countdownElements = [];
 let currentCountdownIndex = -1;
+let typeElement;
+let patternType = 'countdown';
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -24,9 +26,9 @@ countdownValues[currentPageURL] = 0;
 // List of keywords to check for
 const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher', 'reward', 'rewards'];
 
-const leftBtn = document.querySelector('.left-btn');
-const rightBtn = document.querySelector('.right-btn');
-const num = document.querySelector('.total-count');
+let leftElement;
+let rightElement;
+let numElement;
 
 // Add a flag to track if a centered popup has been found
 let centeredPopupFound = false; 
@@ -124,6 +126,13 @@ window.onload = function() {
             popup_value = 0;
         }
 
+        countdownElements.sort((a, b) => {
+            const rectA = a.getBoundingClientRect();
+            const rectB = b.getBoundingClientRect();
+            
+            return rectA.top - rectB.top;
+        });
+
         chrome.runtime.sendMessage({
             countdown_value: countdown_value, 
             malicious_link_count: malicious_link_count, 
@@ -132,7 +141,7 @@ window.onload = function() {
             countdownElements: countdownElements
         }, function(response) {
             // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
-            totalValue = countdown_value + malicious_link_count + prechecked_value + popup_value;
+            // console.log(patternType);
         });
     });
 
@@ -368,15 +377,16 @@ function toggleFloatingButton() {
         const type = document.createElement('p');
 
         leftBtn.classList.add('left-btn');
+        leftElement = leftBtn;
         rightBtn.classList.add('right-btn');
+        rightElement = rightBtn;
         num.classList.add('total-count');
+        numElement = num;
         type.classList.add('type');
+        typeElement = type;
         close.classList.add('close');
 
         button.classList.add('floating-button');
-        leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : 0;
-        num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
-        rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : countdownElements.length;
         type.innerText = 'countdown';
 
         button.style.position = 'fixed';
@@ -416,7 +426,7 @@ function toggleFloatingButton() {
         button.appendChild(num);
         button.appendChild(leftBtn);
         button.appendChild(rightBtn);
-        // button.appendChild(type);
+        button.appendChild(type);
 
         close.addEventListener('click', function() {
             button.remove();
@@ -424,45 +434,13 @@ function toggleFloatingButton() {
                 countdownElement.classList.remove('current-detection');
             })
         });
-        if (countdownElements[currentCountdownIndex]) {
-            countdownElements[currentCountdownIndex].classList.add('current-detection');
+
+        if (type.textContent == 'countdown') {
+            
         }
-        rightBtn.addEventListener('click', function() {
-            if (currentCountdownIndex < countdownElements.length - 1) {
-                currentCountdownIndex++;
-                console.log('index: ', currentCountdownIndex, 'list: ', countdownElements, 'element: ', countdownElements[currentCountdownIndex]);
-                countdownElements[currentCountdownIndex].scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                    inline: "center"
-                });
-                countdownElements.forEach(countdownElement => {
-                    countdownElement.classList.remove('current-detection');
-                })
-                countdownElements[currentCountdownIndex].classList.add('current-detection');
-                leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : 0;
-                num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
-                rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : countdownElements.length;
-            }
-        });
-        leftBtn.addEventListener('click', function() {
-            if (currentCountdownIndex > 0) {
-                currentCountdownIndex--;
-                console.log('index: ', currentCountdownIndex, 'list: ', countdownElements, 'element: ', countdownElements[currentCountdownIndex]);
-                countdownElements[currentCountdownIndex].scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                    inline: "center"
-                });
-                countdownElements.forEach(countdownElement => {
-                    countdownElement.classList.remove('current-detection');
-                })
-                countdownElements[currentCountdownIndex].classList.add('current-detection');
-            }
-            leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : 0;
-            num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
-            rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : countdownElements.length;
-        });
+        leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
+        num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
+        rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 0;
     }
 }
 
@@ -470,7 +448,60 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.command === "toggleFloatingButton") {
         toggleFloatingButton();
     }
+    if (message.type) {
+        patternType = message.type
+        typeElement.innerText = patternType;
+    }
+    if (countdownElements.length > 0 && patternType == 'countdown') {
+        rightElement.addEventListener('click', handleRightButtonClick);
+        leftElement.addEventListener('click', handleLeftButtonClick);
+        leftElement.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
+        numElement.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
+        rightElement.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 1;
+    } else {
+        rightElement.removeEventListener('click', handleRightButtonClick);
+        leftElement.removeEventListener('click', handleLeftButtonClick);
+        leftElement.innerText = 0;
+        numElement.innerText = 0;
+        rightElement.innerText = 0;
+    }
 });
+
+function handleRightButtonClick() {
+    if (currentCountdownIndex < countdownElements.length - 1) {
+        currentCountdownIndex++;
+    } else {
+        currentCountdownIndex = 0;
+    }
+    scrollToCurrentCountdownElement();
+}
+
+function handleLeftButtonClick() {
+    if (currentCountdownIndex > 0) {
+        currentCountdownIndex--;
+    } else {
+        currentCountdownIndex = countdownElements.length - 1;
+    }
+    scrollToCurrentCountdownElement();
+}
+
+function scrollToCurrentCountdownElement() {
+    if (countdownElements[currentCountdownIndex]) {
+        countdownElements[currentCountdownIndex].scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "center"
+        });
+        countdownElements.forEach(countdownElement => {
+            countdownElement.classList.remove('current-detection');
+        })
+        countdownElements[currentCountdownIndex].classList.add('current-detection');
+        leftElement.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
+        numElement.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
+        rightElement.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 1;
+        console.log('index: ', currentCountdownIndex, 'list: ', countdownElements, 'element: ', countdownElements[currentCountdownIndex], 'length:', countdownElements.length);
+    }
+}
 
 // loop through all text nodes
 function traverseDOM(oldNode, node) {

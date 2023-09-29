@@ -124,6 +124,10 @@ document.addEventListener('DOMContentLoaded', function() {
         column.addEventListener('click', function() {
             columns.forEach(col => col.classList.remove('gradient-bg'));
             this.classList.add('gradient-bg');
+            let description = this.querySelector('.column-description').textContent;
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, { type: description });
+            });
         });
     });
     // Default to first column
