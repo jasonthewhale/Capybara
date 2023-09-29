@@ -9,6 +9,7 @@ let countdownElements = [];
 let currentCountdownIndex = -1;
 let typeElement;
 let patternType = 'countdown';
+let hiddenElements = new Set();
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -35,122 +36,123 @@ let centeredPopupFound = false;
 
 var imageUrl = chrome.runtime.getURL('images/floating_background.png');
 
-window.onload = function() {
-    // Get all form inputs (checkboxes and radio buttons)
-    const formInputs = document.querySelectorAll('input');
+// Get all form inputs (checkboxes and radio buttons)
+const formInputs = document.querySelectorAll('input');
 
-    // Iterate through form inputs
-    formInputs.forEach(input => {
-    // Check if the input is visible
-    const isHidden = input.hidden;
-    const isDisplayNone = window.getComputedStyle(input).getPropertyValue('display') === 'none';
-    const rect = input.getBoundingClientRect();
+// Iterate through form inputs
+formInputs.forEach(input => {
+// Check if the input is visible
+const isHidden = input.hidden;
+const isDisplayNone = window.getComputedStyle(input).getPropertyValue('display') === 'none';
+const rect = input.getBoundingClientRect();
 
-    const isVisible = (
-        rect.top > 0 &&
-        rect.left > 0 &&
-        rect.bottom < (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right < (window.innerWidth || document.documentElement.clientWidth)
-    );
+const isVisible = (
+    rect.top > 0 &&
+    rect.left > 0 &&
+    rect.bottom < (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right < (window.innerWidth || document.documentElement.clientWidth)
+);
 
-    if (input.checked && !isHidden && !isDisplayNone && isVisible) {
-        // Highlight the preselected input label
-        const label = document.querySelector(`label[for="${input.id}"]`);
-        console.log(input, rect);
-        prechecked_value++;
-        if (label) {
-            addCornerBorder(label);
-        }
+if (input.checked && !isHidden && !isDisplayNone && isVisible) {
+    // Highlight the preselected input label
+    const label = document.querySelector(`label[for="${input.id}"]`);
+    console.log(input, rect);
+    prechecked_value++;
+    if (label) {
+        addCornerBorder(label);
     }
+} 
 
-    // check every 5s
-    // setInterval(() => {
-    //     countdown_value = 0;
-      
-    //     traverseDOM(oldBody, document.body);
-    //     if (display_count_down_count >= countdown_value) {
-    //       countdown_value = display_count_down_count;
-    //     }
-    //     display_count_down_count = countdown_value;
-      
-    //     chrome.runtime.sendMessage({countdown_value: countdown_value, malicious_link_count: malicious_link_count}, function(response) {
-    //       console.log("checked ", countdown_value, malicious_link_count);
-    //     });
-      
-    // }, 5000);  
+});
 
-    });
+const isSearchEnginePage = window.location.href.includes('google.com/search');
 
-    const isSearchEnginePage = window.location.href.includes('google.com/search');
+// Configuration for the observer (observe changes to attributes)
+const config = { attributes: true, attributeOldValue: true, childList: true, subtree: true, attributeFilter: ['style', 'class'] };
 
-    if (!isSearchEnginePage) {
-        handleOverlaying(document.body);
-    }
-    
-    // Create a new MutationObserver instance
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList') {
-                // Check each added node in the mutation
-                mutation.addedNodes.forEach(function(node) {
-                   handleOverlaying(node);
-                });
-            } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
-                const target = mutation.target;
-                const previousStyle = mutation.oldValue;
-                const currentStyle = target.getAttribute('style');
-                const previousClass = mutation.oldValue;
-                const currentClass = target.getAttribute('class');
-                
-                const previousDisplay = getDisplayValue(previousStyle, previousClass);
-                const currentDisplay = getDisplayValue(currentStyle, currentClass);
+if (!isSearchEnginePage) {
+    handleOverlaying(document.body);
+}
 
-                if (previousDisplay !== currentDisplay) {
-                    handleOverlaying(target);
-                }
-            }
-        });
-
-        // Check countdown after every mutation
-        countdown_value = 0;
-        traverseDOM(oldBody, document.body);
-
-        if (display_count_down_count >= countdown_value) {
-            countdown_value = display_count_down_count;
-        }
-        display_count_down_count = countdown_value;
-
-        if (centeredPopupFound) {
-            popup_value = 1;
-        } else {
-            popup_value = 0;
-        }
-
-        countdownElements.sort((a, b) => {
-            const rectA = a.getBoundingClientRect();
-            const rectB = b.getBoundingClientRect();
+// Create a new MutationObserver instance
+const observer = new MutationObserver(async function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList') {
+            // Check each added node in the mutation
+            mutation.addedNodes.forEach(function(node) {
+                handleOverlaying(node);
+            });
+        } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+            const target = mutation.target;
+            const previousStyle = mutation.oldValue;
+            const currentStyle = target.getAttribute('style');
+            const previousClass = mutation.oldValue;
+            const currentClass = target.getAttribute('class');
             
-            return rectA.top - rectB.top;
-        });
+            const previousDisplay = getDisplayValue(previousStyle, previousClass);
+            const currentDisplay = getDisplayValue(currentStyle, currentClass);
 
-        chrome.runtime.sendMessage({
-            countdown_value: countdown_value, 
-            malicious_link_count: malicious_link_count, 
-            prechecked_value: prechecked_value, 
-            popup_value: popup_value,
-            countdownElements: countdownElements
-        }, function(response) {
-            // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
-            // console.log(patternType);
-        });
+            if (previousDisplay !== currentDisplay) {
+                handleOverlaying(target);
+            }
+        }
     });
 
-    // Configuration for the observer (observe changes to attributes)
-    const config = { attributes: true, attributeOldValue: true, childList: true, subtree: true, attributeFilter: ['style', 'class'] };
+    // disconnect the observer to avoid duplicate checking
+    observer.disconnect();
 
-    // Start observing the DOM with the given configuration
-    observer.observe(document.body, config); 
-};
+    // Check countdown after every mutation
+    countdown_value = 0;
+    // Set sleep time to avoid too frequent mutations
+    await new Promise(resolve => { setTimeout(resolve, 1500) });
+    // Change to async function for stability
+    await traverseDOM(oldBody, document.body);
+
+    if (display_count_down_count >= countdown_value) {
+        countdown_value = display_count_down_count;
+    }
+    display_count_down_count = countdown_value;
+
+    if (centeredPopupFound) {
+        popup_value = 1;
+    } else {
+        popup_value = 0;
+    }
+
+    countdownElements.sort((a, b) => {
+        const rectA = a.getBoundingClientRect();
+        const rectB = b.getBoundingClientRect();
+        
+        return rectA.top - rectB.top;
+    });
+
+    chrome.runtime.sendMessage({
+        countdown_value: countdown_value, 
+        malicious_link_count: malicious_link_count, 
+        prechecked_value: prechecked_value, 
+        popup_value: popup_value,
+        countdownElements: countdownElements
+    }, function(response) {
+        // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
+        // console.log(patternType);
+    });
+
+    // reconnect the observer
+    observer.observe(document.body, config);
+});
+
+// Start observing the DOM with the given configuration
+observer.observe(document.body, config);
+
+// Check hidden every 5 secs
+setInterval(async () => {
+    // disconnect the observer to avoid duplicate checking
+    observer.disconnect();
+    findHidden(document.body);
+    console.log(`Found ${hiddenElements.size} malicious nodes`);
+    // reconnect the observer
+    observer.observe(document.body, config);
+}, 5000);
 
 async function findDeepestOverlayingDiv(node, depth) {
     let deepestOverlayingDiv = null;
@@ -504,7 +506,7 @@ function scrollToCurrentCountdownElement() {
 }
 
 // loop through all text nodes
-function traverseDOM(oldNode, node) {
+async function traverseDOM(oldNode, node) {
   var children = node.childNodes;
   var oldChildren = oldNode.childNodes;
   
@@ -513,67 +515,6 @@ function traverseDOM(oldNode, node) {
   }
 
   for(var i = 0; i < children.length; i++) {
-
-        /**
-     * If the node is an element node, the nodeType property will return 1.
-     * If the node is an attribute node, the nodeType property will return 2.
-     * If the node is a text node, the nodeType property will return 3.
-     */
-
-    // const catchHidden = (node) => {
-    //     /**
-    //      * Some extra conditions to check
-    //      * 
-    //      * 1. Similarity of color and bgColor:
-    //      *      let bgCol = children[i].parentNode.style.backgroundColor;
-    //      *      let col = children[i].style.color;
-    //      *      let similarity = colorSimilarityNormalized(getRGBArray(bgCol), getRGBArray(col));
-    //      * 2. The nearest parent className
-    //      *      isFooter(childNode)
-    //      * 3. Opacity (threshold as 0.5, [0, 1] => [transparent, opaque])
-    //      */
-    //     // This is your current filter processing on node
-    //     let style = window.getComputedStyle(node.parentNode, null)
-    //     let parentStyle = window.getComputedStyle(node.parentNode.parentNode, null)
-    //     let fontSize = style.getPropertyValue('font-size');
-    //     fontSize = parseFloat(fontSize);
-    //     if (fontSize <= 12
-    //         && node.nodeType === 3
-    //         && match_hidden(node.nodeValue)
-    //         && node.parentNode.tagName !== 'STYLE' 
-    //         && node.parentNode.tagName !== 'SCRIPT') {
-    //         console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`);
-    //         node.parentNode.style.color = "red";
-    //         node.parentNode.style.display = "block";
-    //         node.parentNode.style.visibility = "visible";
-    //         // Add black border to hidden text
-    //         labelPattern(node);
-    //         // malicious_link_count ++;
-    //     };
-        
-    //     if (style.color && parentStyle.backgroundColor) {
-    //         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), getRGBArray(style.color));
-    //         if (similarity >= 0.9 
-    //             && similarity < 1
-    //             && node.parentNode.tagName === 'A') {
-    //             console.log(`Found similar colour, className: ${node.className}, fontSize: ${fontSize}, similarity: ${similarity}`);
-    //             // Add black border to hidden text
-    //             labelPattern(node);
-    //         }
-    //     };
-
-    //     // if (node.parentNode.hasAttribute('href')
-    //     //     && (children[i].parentNode.getAttribute('href').startsWith('http')
-    //     //     || node.getAttribute('href').includes('.html')))
-
-    //     if (node.hasChildNodes()){
-    //         for(let child of node.childNodes){
-    //             catchHidden(child);
-    //         }
-    //     }
-    // };
-    // catchHidden(children[i])
-
     if(children[i].nodeType === 3 ) { // text node
         
         // check if the text node is a countdown
@@ -618,6 +559,65 @@ function extractAllTextNodes(element, result = []) {
 
     return result;
 }
+
+async function findHidden(body) {
+    for (var i = 0; i < body.childNodes.length; i++) {
+        catchHidden(body.childNodes[i]);
+    }
+}
+
+function catchHidden(node) {
+    // This is your current filter processing on node
+    let style = window.getComputedStyle(node.parentNode, null)
+    let parentStyle = window.getComputedStyle(node.parentNode.parentNode, null)
+    let fontSize = style.getPropertyValue('font-size');
+    fontSize = parseFloat(fontSize);
+    if (fontSize <= 12
+        && node.nodeType === 3
+        && match_hidden(node.nodeValue)
+        && node.parentNode.tagName !== 'STYLE' 
+        && node.parentNode.tagName !== 'SCRIPT') {
+        node.parentNode.style.color = "red";
+        node.parentNode.style.display = "block";
+        node.parentNode.style.visibility = "visible";
+        // Add black border to hidden text
+        console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`)
+        labelPattern(node);
+        hiddenElements.add(node);
+    };
+    
+    if (style.color && parentStyle.backgroundColor) {
+        let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), 
+            getRGBArray(style.color));
+        if (similarity >= 0.9 
+            && similarity < 1) {
+            console.log(`Found similar colour, className: ${node.className}, 
+                fontSize: ${fontSize}, similarity: ${similarity}`);
+            // Add black border to hidden text
+            labelPattern(node);
+            hiddenElements.add(node);
+        }
+    };
+
+    if (node.parentNode.hasAttribute('href')
+        && (node.parentNode.getAttribute('href').startsWith('http')
+        || node.parentNode.getAttribute('href').includes('.html'))) {
+        // console.log(`Found link, className: ${node.className}, fontSize: ${fontSize}`);
+    }
+
+    if (node.hasChildNodes()) {
+        for(let child of node.childNodes) {
+            catchHidden(child);
+        }
+    }
+
+    malicious_link_count = hiddenElements.size;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * Start of helper functions
+ */
 
 // Helper function to calculate the similarity between two colArrs
 function colorSimilarityNormalized(rgb1, rgb2) {
