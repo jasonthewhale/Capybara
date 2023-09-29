@@ -9,6 +9,9 @@ let countdownElements = [];
 let currentCountdownIndex = -1;
 let typeElement;
 let patternType = 'countdown';
+let leftElement;
+let rightElement;
+let numElement;
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -25,10 +28,6 @@ countdownValues[currentPageURL] = 0;
 
 // List of keywords to check for
 const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher', 'reward', 'rewards'];
-
-let leftElement;
-let rightElement;
-let numElement;
 
 // Add a flag to track if a centered popup has been found
 let centeredPopupFound = false; 
@@ -586,10 +585,11 @@ function traverseDOM(oldNode, node) {
                     const countdownElement = children[i].parentNode.parentNode;
                     countdownElement.style.border = '3px solid black';
                     // console.log("found countdown", countdownElement, countdown_value);
-                    countdown_value++;
+                    // countdown_value++;
                     if (!countdownElements.includes(countdownElement)) {
                         countdownElements.push(countdownElement);
                     }
+                    countdown_value = countdownElements.length;
                 }
             }
         }
