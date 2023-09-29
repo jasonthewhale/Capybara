@@ -4,16 +4,22 @@ chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
       updatePopup(response);
     }
 });
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    // console.log(message.countdown_value, message.malicious_link_count, message.prechecked_value, message.popup_value);
+});
   
 // Update popup function
 function updatePopup(data) {
     let countdown_value = data.countdown_value;
     let malicious_link_value = data.malicious_link_count;
     let prechecked_value = data.prechecked_value;
+    let popup_value = data.popup_value;
     let darkpatterns = [
         {name:'countdown', value: countdown_value},
         {name:'hidden info', value: malicious_link_value},
-        {name:'preselected', value: prechecked_value}
+        {name:'preselected', value: prechecked_value},
+        {name:'popup', value: popup_value}
     ]
     darkpatterns.sort((a, b) => b.value - a.value);
 

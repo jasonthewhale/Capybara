@@ -92,3 +92,7 @@
   padding: 0 !important;
   line-height: 0 !important;
 }
+
+.current-detection {
+  background-color: cornflowerblue;
+}

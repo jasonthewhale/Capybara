@@ -4,6 +4,9 @@ let popup_value = 0;
 let malicious_link_count = 0;
 let display_count_down_count = 0;
 let prechecked_value = 0;
+let totalValue;
+let countdownElements = [];
+let currentCountdownIndex = -1;
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -20,6 +23,10 @@ countdownValues[currentPageURL] = 0;
 
 // List of keywords to check for
 const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher', 'reward', 'rewards'];
+
+const leftBtn = document.querySelector('.left-btn');
+const rightBtn = document.querySelector('.right-btn');
+const num = document.querySelector('.total-count');
 
 // Add a flag to track if a centered popup has been found
 let centeredPopupFound = false; 
@@ -72,7 +79,11 @@ window.onload = function() {
 
     });
 
-    handleOverlaying(document.body);
+    const isSearchEnginePage = window.location.href.includes('google.com/search');
+
+    if (!isSearchEnginePage) {
+        handleOverlaying(document.body);
+    }
     
     // Create a new MutationObserver instance
     const observer = new MutationObserver(function(mutations) {
@@ -107,8 +118,21 @@ window.onload = function() {
         }
         display_count_down_count = countdown_value;
 
-        chrome.runtime.sendMessage({countdown_value: countdown_value, malicious_link_count: malicious_link_count, prechecked_value: prechecked_value}, function(response) {
-            console.log("checked ", countdown_value, malicious_link_count, prechecked_value);
+        if (centeredPopupFound) {
+            popup_value = 1;
+        } else {
+            popup_value = 0;
+        }
+
+        chrome.runtime.sendMessage({
+            countdown_value: countdown_value, 
+            malicious_link_count: malicious_link_count, 
+            prechecked_value: prechecked_value, 
+            popup_value: popup_value,
+            countdownElements: countdownElements
+        }, function(response) {
+            // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
+            totalValue = countdown_value + malicious_link_count + prechecked_value + popup_value;
         });
     });
 
@@ -117,28 +141,39 @@ window.onload = function() {
 
     // Start observing the DOM with the given configuration
     observer.observe(document.body, config); 
-    
 };
 
-function findDeepestOverlayingDiv(node) {
+async function findDeepestOverlayingDiv(node, depth) {
     let deepestOverlayingDiv = null;
-  
+    let textContent = node.textContent.toLowerCase();
+    let foundKeyword = keywords.find(keyword => textContent.includes(keyword));
+    let includesImg;
+
+    const maxDepth = 10;
+
+    if (depth >= maxDepth) {
+        return null;
+    }
+
     // iterate all child nodes
     for (let i = 0; i < node.childNodes.length; i++) {
-      const childNode = node.childNodes[i];
-  
-        if (childNode instanceof HTMLElement && !childNode.classList.contains('processed') && childNode.childNodes.length > 0) {
+        const childNode = node.childNodes[i];
+
+        if (childNode instanceof HTMLElement &&
+            !childNode.classList.contains('processed') &&
+            childNode.childNodes.length > 0 &&
+            (foundKeyword || includesImg)
+        ) {
             if (isElementOverlaying(childNode)) {
                 // if current node is overlaying，set it as deepest overlaying div
                 deepestOverlayingDiv = childNode;
             }
 
-            const childDeepestOverlayingDiv = findDeepestOverlayingDiv(childNode);
+            const childDeepestOverlayingDiv = await findDeepestOverlayingDiv(childNode, depth + 1);
 
             if (childDeepestOverlayingDiv !== null) {
                 // if there is deeper overlaying div，update the deepest overlaying div
                 deepestOverlayingDiv = childDeepestOverlayingDiv;
-                console.log('1:', deepestOverlayingDiv);
             }
 
             // Add processed class to mark this element has been processed
@@ -177,8 +212,8 @@ function getDisplayValue(styleString, classString) {
     return styleMatch ? styleMatch[1] : classMatch ? classMatch[1] : null;
 }
 
-function handleOverlaying(element) {
-    var deepestOverlayingDiv = findDeepestOverlayingDiv(element);
+async function handleOverlaying(element) {
+    const deepestOverlayingDiv = await findDeepestOverlayingDiv(element, 0);
     if (deepestOverlayingDiv !== null) {
         console.log("deepest overlaying: ", deepestOverlayingDiv);
         centeredPopupFound = false;
@@ -188,10 +223,9 @@ function handleOverlaying(element) {
 
 function findCenteredPopup(element) {
     if (centeredPopupFound) return; 
-    
-    var textContent = element.textContent.toLowerCase();
-    const foundKeyword = keywords.find(keyword => textContent.includes(keyword));
-    var includesImg;
+
+    let textContent = element.textContent.toLowerCase();
+    let foundKeyword = keywords.find(keyword => textContent.includes(keyword));
 
     // Get the position and size information of the element
     const boundingBox = element.getBoundingClientRect();
@@ -209,13 +243,13 @@ function findCenteredPopup(element) {
         Math.abs(boundingBox.top + boundingBox.height / 2 - viewportHeight / 2) < margin &&
         boundingBox.height < viewportHeight * 0.8 &&
         boundingBox.width < viewportWidth * 0.7 &&
-        (foundKeyword || includesImg)
+        foundKeyword
     ) {
         console.log('centered popup:', element);
 
-        addCornerBorder(element);
+        // addCornerBorder(element);
+        element.style.border = "5px solid black"
         centeredPopupFound = true;
-        popup_value++;
         return;
     }
 
@@ -309,12 +343,22 @@ function addCornerBorder(element) {
     element.appendChild(fragment);
 }
 
+function addCountdownElement(element) {
+    countdownElements.push(element);
+}
+
+function getNextCountdownElement(currentIndex) {
+    const nextIndex = currentIndex + 1;
+    return countdownElements[nextIndex];
+}
+
 // pop up button
 function toggleFloatingButton() {
     const existingButton = document.querySelector('.floating-button');
 
     if (existingButton) {
         existingButton.remove();
+        countdownElements[currentCountdownIndex].classList.remove('current-detection');
     } else {
         const button = document.createElement('div');
         const leftBtn = document.createElement('button');
@@ -330,9 +374,9 @@ function toggleFloatingButton() {
         close.classList.add('close');
 
         button.classList.add('floating-button');
-        leftBtn.innerText = '22';
-        num.innerText = '23';
-        rightBtn.innerText = '24';
+        leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : 0;
+        num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
+        rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : countdownElements.length;
         type.innerText = 'countdown';
 
         button.style.position = 'fixed';
@@ -376,6 +420,48 @@ function toggleFloatingButton() {
 
         close.addEventListener('click', function() {
             button.remove();
+            countdownElements.forEach(countdownElement => {
+                countdownElement.classList.remove('current-detection');
+            })
+        });
+        if (countdownElements[currentCountdownIndex]) {
+            countdownElements[currentCountdownIndex].classList.add('current-detection');
+        }
+        rightBtn.addEventListener('click', function() {
+            if (currentCountdownIndex < countdownElements.length - 1) {
+                currentCountdownIndex++;
+                console.log('index: ', currentCountdownIndex, 'list: ', countdownElements, 'element: ', countdownElements[currentCountdownIndex]);
+                countdownElements[currentCountdownIndex].scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                    inline: "center"
+                });
+                countdownElements.forEach(countdownElement => {
+                    countdownElement.classList.remove('current-detection');
+                })
+                countdownElements[currentCountdownIndex].classList.add('current-detection');
+                leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : 0;
+                num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
+                rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : countdownElements.length;
+            }
+        });
+        leftBtn.addEventListener('click', function() {
+            if (currentCountdownIndex > 0) {
+                currentCountdownIndex--;
+                console.log('index: ', currentCountdownIndex, 'list: ', countdownElements, 'element: ', countdownElements[currentCountdownIndex]);
+                countdownElements[currentCountdownIndex].scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                    inline: "center"
+                });
+                countdownElements.forEach(countdownElement => {
+                    countdownElement.classList.remove('current-detection');
+                })
+                countdownElements[currentCountdownIndex].classList.add('current-detection');
+            }
+            leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : 0;
+            num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
+            rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : countdownElements.length;
         });
     }
 }
@@ -466,10 +552,13 @@ function traverseDOM(oldNode, node) {
                 let allTexts = extractAllTextNodes(aimNode).join(''); // get all text nodes in the same level
                 
                 if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
-                    children[i].parentNode.parentNode.style.backgroundColor = "red";
-                    // addCornerBorder(children[i].parentNode.parentNode);
-                    console.log("found countdown", allTexts);
+                    const countdownElement = children[i].parentNode.parentNode;
+                    countdownElement.style.border = '3px solid black';
+                    // console.log("found countdown", countdownElement, countdown_value);
                     countdown_value++;
+                    if (!countdownElements.includes(countdownElement)) {
+                        countdownElements.push(countdownElement);
+                    }
                 }
             }
         }
