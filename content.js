@@ -35,123 +35,126 @@ let centeredPopupFound = false;
 
 var imageUrl = chrome.runtime.getURL('images/floating_background.png');
 
-// Get all form inputs (checkboxes and radio buttons)
-const formInputs = document.querySelectorAll('input');
+window.onload = async function() {
+    // Get all form inputs (checkboxes and radio buttons)
+    const formInputs = document.querySelectorAll('input');
 
-// Iterate through form inputs
-formInputs.forEach(input => {
-// Check if the input is visible
-const isHidden = input.hidden;
-const isDisplayNone = window.getComputedStyle(input).getPropertyValue('display') === 'none';
-const rect = input.getBoundingClientRect();
+    // Iterate through form inputs
+    formInputs.forEach(input => {
+    // Check if the input is visible
+    const isHidden = input.hidden;
+    const isDisplayNone = window.getComputedStyle(input).getPropertyValue('display') === 'none';
+    const rect = input.getBoundingClientRect();
 
-const isVisible = (
-    rect.top > 0 &&
-    rect.left > 0 &&
-    rect.bottom < (window.innerHeight || document.documentElement.clientHeight) &&
-    rect.right < (window.innerWidth || document.documentElement.clientWidth)
-);
+    const isVisible = (
+        rect.top > 0 &&
+        rect.left > 0 &&
+        rect.bottom < (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right < (window.innerWidth || document.documentElement.clientWidth)
+    );
 
-if (input.checked && !isHidden && !isDisplayNone && isVisible) {
-    // Highlight the preselected input label
-    const label = document.querySelector(`label[for="${input.id}"]`);
-    console.log(input, rect);
-    prechecked_value++;
-    if (label) {
-        addCornerBorder(label);
-    }
-} 
-
-});
-
-const isSearchEnginePage = window.location.href.includes('google.com/search');
-
-// Configuration for the observer (observe changes to attributes)
-const config = { attributes: true, attributeOldValue: true, childList: true, subtree: true, attributeFilter: ['style', 'class'] };
-
-if (!isSearchEnginePage) {
-    handleOverlaying(document.body);
-}
-
-// Create a new MutationObserver instance
-const observer = new MutationObserver(async function(mutations) {
-    mutations.forEach(function(mutation) {
-        if (mutation.type === 'childList') {
-            // Check each added node in the mutation
-            mutation.addedNodes.forEach(function(node) {
-                handleOverlaying(node);
-            });
-        } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
-            const target = mutation.target;
-            const previousStyle = mutation.oldValue;
-            const currentStyle = target.getAttribute('style');
-            const previousClass = mutation.oldValue;
-            const currentClass = target.getAttribute('class');
-            
-            const previousDisplay = getDisplayValue(previousStyle, previousClass);
-            const currentDisplay = getDisplayValue(currentStyle, currentClass);
-
-            if (previousDisplay !== currentDisplay) {
-                handleOverlaying(target);
-            }
+    if (input.checked && !isHidden && !isDisplayNone && isVisible) {
+        // Highlight the preselected input label
+        const label = document.querySelector(`label[for="${input.id}"]`);
+        console.log(input, rect);
+        prechecked_value++;
+        if (label) {
+            addCornerBorder(label);
         }
+    } 
+
     });
 
-    // disconnect the observer to avoid duplicate checking
-    observer.disconnect();
+    const isSearchEnginePage = window.location.href.includes('google.com/search');
 
-    // Check countdown after every mutation
-    countdown_value = 0;
-    // Set sleep time to avoid too frequent mutations
-    await new Promise(resolve => { setTimeout(resolve, 1500) });
-    // Change to async function for stability
-    await traverseDOM(oldBody, document.body);
+    // Configuration for the observer (observe changes to attributes)
+    const config = { attributes: true, attributeOldValue: true, childList: true, subtree: true, attributeFilter: ['style', 'class'] };
 
-    if (display_count_down_count >= countdown_value) {
-        countdown_value = display_count_down_count;
-    }
-    display_count_down_count = countdown_value;
-
-    if (centeredPopupFound) {
-        popup_value = 1;
-    } else {
-        popup_value = 0;
+    if (!isSearchEnginePage) {
+        setTimeout(function() {
+            handleOverlaying(document.body);
+        }, 0);
     }
 
-    countdownElements.sort((a, b) => {
-        const rectA = a.getBoundingClientRect();
-        const rectB = b.getBoundingClientRect();
-        
-        return rectA.top - rectB.top;
+    // Create a new MutationObserver instance
+    const observer = new MutationObserver(async function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                // Check each added node in the mutation
+                mutation.addedNodes.forEach(function(node) {
+                    handleOverlaying(node);
+                });
+            } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                const target = mutation.target;
+                const previousStyle = mutation.oldValue;
+                const currentStyle = target.getAttribute('style');
+                const previousClass = mutation.oldValue;
+                const currentClass = target.getAttribute('class');
+                
+                const previousDisplay = getDisplayValue(previousStyle, previousClass);
+                const currentDisplay = getDisplayValue(currentStyle, currentClass);
+
+                if (previousDisplay !== currentDisplay) {
+                    handleOverlaying(target);
+                }
+            }
+        });
+
+        // disconnect the observer to avoid duplicate checking
+        // observer.disconnect();
+
+        // Check countdown after every mutation
+        countdown_value = 0;
+        // Set sleep time to avoid too frequent mutations
+        await new Promise(resolve => { setTimeout(resolve, 1500) });
+        // Change to async function for stability
+        await traverseDOM(oldBody, document.body);
+
+        if (display_count_down_count >= countdown_value) {
+            countdown_value = display_count_down_count;
+        }
+        display_count_down_count = countdown_value;
+
+        if (centeredPopupFound) {
+            popup_value = 1;
+        } else {
+            popup_value = 0;
+        }
+
+        countdownElements.sort((a, b) => {
+            const rectA = a.getBoundingClientRect();
+            const rectB = b.getBoundingClientRect();
+            
+            return rectA.top - rectB.top;
+        });
+
+        chrome.runtime.sendMessage({
+            countdown_value: countdown_value, 
+            malicious_link_count: malicious_link_count, 
+            prechecked_value: prechecked_value, 
+            popup_value: popup_value,
+            countdownElements: countdownElements
+        }, function(response) {
+            console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
+        });
+
+        // reconnect the observer
+        observer.observe(document.body, config);
     });
 
-    chrome.runtime.sendMessage({
-        countdown_value: countdown_value, 
-        malicious_link_count: malicious_link_count, 
-        prechecked_value: prechecked_value, 
-        popup_value: popup_value,
-        countdownElements: countdownElements
-    }, function(response) {
-        // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
-        // console.log(patternType);
-    });
-
-    // reconnect the observer
+    // Start observing the DOM with the given configuration
     observer.observe(document.body, config);
-});
 
-// Start observing the DOM with the given configuration
-observer.observe(document.body, config);
-
-// Check hidden every 5 secs
-setInterval(async () => {
-    // disconnect the observer to avoid duplicate checking
-    observer.disconnect();
-    findHidden(document.body);
-    console.log(`Found ${hiddenElements.size} malicious nodes`);
-    // reconnect the observer
-    observer.observe(document.body, config);
-}, 5000);
+    // Check hidden every 5 secs
+    setInterval(async () => {
+        // disconnect the observer to avoid duplicate checking
+        observer.disconnect();
+        findHidden(document.body);
+        console.log(`Found ${hiddenElements.size} malicious nodes`);
+        // reconnect the observer
+        observer.observe(document.body, config);
+    }, 5000);
+}
 
 async function findDeepestOverlayingDiv(node, depth) {
     let deepestOverlayingDiv = null;
@@ -159,7 +162,7 @@ async function findDeepestOverlayingDiv(node, depth) {
     let foundKeyword = keywords.find(keyword => textContent.includes(keyword));
     let includesImg;
 
-    const maxDepth = 10;
+    const maxDepth = 3;
 
     if (depth >= maxDepth) {
         return null;
@@ -188,6 +191,11 @@ async function findDeepestOverlayingDiv(node, depth) {
 
             // Add processed class to mark this element has been processed
             childNode.classList.add('processed');
+        }
+
+        // Add a delay here to yield to the main thread
+        if (i % 10 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 0)); // Adjust the delay as needed
         }
     }
 
@@ -227,12 +235,13 @@ async function handleOverlaying(element) {
     if (deepestOverlayingDiv !== null) {
         console.log("deepest overlaying: ", deepestOverlayingDiv);
         centeredPopupFound = false;
-        findCenteredPopup(deepestOverlayingDiv);
+        findCenteredPopup(deepestOverlayingDiv, 0);
     }
 }
 
-function findCenteredPopup(element) {
-    if (centeredPopupFound) return; 
+function findCenteredPopup(element, depth) {
+    const maxDepth = 1;
+    if (centeredPopupFound || depth > maxDepth) return; 
 
     let textContent = element.textContent.toLowerCase();
     let foundKeyword = keywords.find(keyword => textContent.includes(keyword));
@@ -266,7 +275,7 @@ function findCenteredPopup(element) {
     // Recursively iterate through child div elements
     const childDivs = element.querySelectorAll('div');
     for (const childDiv of childDivs) {
-        findCenteredPopup(childDiv);
+        findCenteredPopup(childDiv, depth + 1);
     }
 } 
 
