@@ -4,9 +4,10 @@ let popup_value = 0;
 let malicious_link_count = 0;
 let display_count_down_count = 0;
 let prechecked_value = 0;
-let totalValue;
 let countdownElements = [];
+let precheckedElements = [];
 let currentCountdownIndex = -1;
+let currentPrecheckedIndex = -1;
 let typeElement;
 let patternType = 'countdown';
 let leftElement;
@@ -28,7 +29,7 @@ const countdownValues = {};
 countdownValues[currentPageURL] = 0;
 
 // List of keywords to check for
-const keywords = ['offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher', 'reward', 'rewards'];
+const keywords = ['expire', 'expires', 'offer', 'offers', 'promotion', 'promotions', 'discount', 'discounts', 'forgot', 'receive', 'voucher', 'reward', 'rewards'];
 
 // Add a flag to track if a centered popup has been found
 let centeredPopupFound = false; 
@@ -59,7 +60,11 @@ window.onload = async function() {
         console.log(input, rect);
         prechecked_value++;
         if (label) {
-            addCornerBorder(label);
+            // addCornerBorder(label);
+            label.style.border = '3px solid black';
+            if (!precheckedElements.includes(label)) {
+                precheckedElements.push(label);
+            }
         }
     } 
 
@@ -95,6 +100,7 @@ window.onload = async function() {
                 const currentDisplay = getDisplayValue(currentStyle, currentClass);
 
                 if (previousDisplay !== currentDisplay) {
+                    console.log('display: ', target);
                     handleOverlaying(target);
                 }
             }
@@ -121,12 +127,8 @@ window.onload = async function() {
             popup_value = 0;
         }
 
-        countdownElements.sort((a, b) => {
-            const rectA = a.getBoundingClientRect();
-            const rectB = b.getBoundingClientRect();
-            
-            return rectA.top - rectB.top;
-        });
+        sortElements(countdownElements);
+        sortElements(precheckedElements);
 
         chrome.runtime.sendMessage({
             countdown_value: countdown_value, 
@@ -135,7 +137,7 @@ window.onload = async function() {
             popup_value: popup_value,
             countdownElements: countdownElements
         }, function(response) {
-            console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
+            // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
         });
 
         // reconnect the observer
@@ -173,11 +175,10 @@ async function findDeepestOverlayingDiv(node, depth) {
         const childNode = node.childNodes[i];
 
         if (childNode instanceof HTMLElement &&
-            !childNode.classList.contains('processed') &&
             childNode.childNodes.length > 0 &&
             (foundKeyword || includesImg)
         ) {
-            if (isElementOverlaying(childNode)) {
+            if (isElementOverlaying(childNode) || isElementFixed(childNode)) {
                 // if current node is overlaying，set it as deepest overlaying div
                 deepestOverlayingDiv = childNode;
             }
@@ -190,12 +191,12 @@ async function findDeepestOverlayingDiv(node, depth) {
             }
 
             // Add processed class to mark this element has been processed
-            childNode.classList.add('processed');
+            // childNode.classList.add('processed');
         }
 
         // Add a delay here to yield to the main thread
         if (i % 10 === 0) {
-            await new Promise(resolve => setTimeout(resolve, 0)); // Adjust the delay as needed
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
     }
 
@@ -212,8 +213,8 @@ function isElementOverlaying(element) {
     const overlapThreshold = 0.9;
 
     // Calculate the area of intersection with the viewport
-    const intersectionArea = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0)) *
-        Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+    const intersectionArea = Math.max(0, Math.min(rect.right, viewportWidth) + Math.max(rect.left, 0)) *
+        Math.max(0, Math.min(rect.bottom, viewportHeight) + Math.max(rect.top, 0));
 
     // Calculate the area of the viewport
     const viewportArea = viewportWidth * viewportHeight;
@@ -221,6 +222,11 @@ function isElementOverlaying(element) {
     // Determine if the element covers a significant portion of the viewport
     return rect.width >= viewportWidth && rect.height >= viewportHeight && intersectionArea / viewportArea >= overlapThreshold;
 }
+
+function isElementFixed(element) {
+    const computedStyle = window.getComputedStyle(element);
+    return computedStyle.position === 'fixed';
+  }  
 
 
 function getDisplayValue(styleString, classString) {
@@ -279,6 +285,15 @@ function findCenteredPopup(element, depth) {
     }
 } 
 
+function sortElements(elements) {
+    elements.sort((a, b) => {
+        const rectA = a.getBoundingClientRect();
+        const rectB = b.getBoundingClientRect();
+        
+        return rectA.top - rectB.top;
+    });
+}
+
 // add cornerborder to the corresponding element
 function addCornerBorder(element) {
     const cornerSize = '3px solid black';
@@ -286,8 +301,8 @@ function addCornerBorder(element) {
 
     const cornerStyle = `
         position: absolute;
-        width: 8px;
-        height: 8px;
+        width: 10px;
+        height: 10px;
         z-index: 9999999;
         !important;
     `;
@@ -295,6 +310,7 @@ function addCornerBorder(element) {
     const fragment = document.createDocumentFragment();
 
     const topLeftCorner = document.createElement('div');
+    topLeftCorner.classList.add('corner-element');
     topLeftCorner.style = `
         ${cornerStyle}
         top: ${cornerOffset};
@@ -304,6 +320,7 @@ function addCornerBorder(element) {
     `;
 
     const topRightCorner = document.createElement('div');
+    topRightCorner.classList.add('corner-element');
     topRightCorner.style = `
         ${cornerStyle}
         top: ${cornerOffset};
@@ -313,6 +330,7 @@ function addCornerBorder(element) {
     `;
 
     const bottomLeftCorner = document.createElement('div');
+    bottomLeftCorner.classList.add('corner-element');
     bottomLeftCorner.style = `
         ${cornerStyle}
         bottom: ${cornerOffset};
@@ -322,6 +340,7 @@ function addCornerBorder(element) {
     `;
 
     const bottomRightCorner = document.createElement('div');
+    bottomRightCorner.classList.add('corner-element');
     bottomRightCorner.style = `
         ${cornerStyle}
         bottom: ${cornerOffset};
@@ -330,30 +349,6 @@ function addCornerBorder(element) {
         border-bottom: ${cornerSize};
     `;
 
-    const detectBackground = document.createElement('div');
-    detectBackground.style = `
-        position: absolute;
-        height: 100%;
-        width: 100%;
-        top: 0;
-        left: 0;
-        background-color: blue;
-        opacity: 1;
-        z-index = 999999;
-        !important;
-    `
-    const testElement = document.createElement('div');
-    testElement.style = `
-        position: absolute;
-        height: 30px;
-        width: 30px;
-        background-color: red;
-        top: 300px;
-        left: 50px;
-        z-index = 999999;
-    `
-    // document.body.appendChild(detectBackground);
-    // detectBackground.appendChild(testElement);
     fragment.appendChild(topLeftCorner);
     fragment.appendChild(topRightCorner);
     fragment.appendChild(bottomLeftCorner);
@@ -362,14 +357,14 @@ function addCornerBorder(element) {
     element.appendChild(fragment);
 }
 
-function addCountdownElement(element) {
-    countdownElements.push(element);
+function removeCornerBorder(element) {
+    const cornerElements = element.querySelectorAll('.corner-element');
+
+    cornerElements.forEach(cornerElement => {
+        cornerElement.remove();
+    });
 }
 
-function getNextCountdownElement(currentIndex) {
-    const nextIndex = currentIndex + 1;
-    return countdownElements[nextIndex];
-}
 
 // pop up button
 function toggleFloatingButton() {
@@ -377,6 +372,7 @@ function toggleFloatingButton() {
 
     if (existingButton) {
         existingButton.remove();
+        removeBackground();
         countdownElements[currentCountdownIndex].classList.remove('current-detection');
     } else {
         const button = document.createElement('div');
@@ -397,12 +393,12 @@ function toggleFloatingButton() {
         close.classList.add('close');
 
         button.classList.add('floating-button');
-        type.innerText = 'countdown';
+        type.innerText = patternType;
 
         button.style.position = 'fixed';
         button.style.bottom = '20px'; 
         button.style.right = '20px';  
-        button.style.zIndex = '9999';
+        button.style.zIndex = '99999';
         button.style.cursor = 'move';
 
         let isDragging = false;
@@ -440,19 +436,24 @@ function toggleFloatingButton() {
 
         close.addEventListener('click', function() {
             button.remove();
+            removeBackground();
             countdownElements.forEach(countdownElement => {
                 countdownElement.classList.remove('current-detection');
             })
         });
 
-        if (type.textContent == 'countdown') {
-            
-        }
-        leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
-        num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
-        rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 0;
+        // leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
+        // num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
+        // rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 0;
+        setDefaultCount(currentCountdownIndex, countdownElements);
     }
 }
+
+function setDefaultCount(currentIndex, elements) {
+    leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
+    numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : 0;
+    rightElement.innerText = (currentIndex < elements.length - 1) ? currentIndex + 2 : 0;
+} 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.command === "toggleFloatingButton") {
@@ -462,54 +463,99 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         patternType = message.type
         typeElement.innerText = patternType;
     }
-    if (countdownElements.length > 0 && patternType == 'countdown') {
-        rightElement.addEventListener('click', handleRightButtonClick);
-        leftElement.addEventListener('click', handleLeftButtonClick);
-        leftElement.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
-        numElement.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
-        rightElement.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 1;
+
+    if (patternType == 'preselected') {
+        setDefaultCount(currentPrecheckedIndex, precheckedElements);
+    } else if (patternType == 'countdown') {
+        setDefaultCount(currentCountdownIndex, countdownElements);
     } else {
-        rightElement.removeEventListener('click', handleRightButtonClick);
-        leftElement.removeEventListener('click', handleLeftButtonClick);
-        leftElement.innerText = 0;
-        numElement.innerText = 0;
-        rightElement.innerText = 0;
+        setDefaultCount(-1, []);
     }
+
+    rightElement.addEventListener('click', function() {
+        if (patternType == 'countdown' && countdownElements.length > 0) {
+            currentCountdownIndex = handleRightButtonClick(currentCountdownIndex, countdownElements);
+            scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
+        } else if (patternType == 'preselected' && precheckedElements.length > 0) {
+            currentPrecheckedIndex = handleRightButtonClick(currentPrecheckedIndex, precheckedElements);
+            scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+        }
+    });
+    leftElement.addEventListener('click', function() {
+        if (patternType == 'countdown' && countdownElements.length > 0) {
+            currentCountdownIndex = handleLeftButtonClick(currentCountdownIndex, countdownElements);
+            scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
+        } else if (patternType == 'preselected' && precheckedElements.length) {
+            currentPrecheckedIndex = handleLeftButtonClick(currentPrecheckedIndex, precheckedElements);
+            scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+        }
+    });
 });
 
-function handleRightButtonClick() {
-    if (currentCountdownIndex < countdownElements.length - 1) {
-        currentCountdownIndex++;
+function handleRightButtonClick(currentIndex, elements) {
+    if (currentIndex < elements.length - 1) {
+        currentIndex++;
     } else {
-        currentCountdownIndex = 0;
+        currentIndex = 0;
     }
-    scrollToCurrentCountdownElement();
+    return currentIndex;
 }
 
-function handleLeftButtonClick() {
-    if (currentCountdownIndex > 0) {
-        currentCountdownIndex--;
+function handleLeftButtonClick(currentIndex, elements) {
+    if (currentIndex > 0) {
+        currentIndex--;
     } else {
-        currentCountdownIndex = countdownElements.length - 1;
+        currentIndex = elements.length - 1;
     }
-    scrollToCurrentCountdownElement();
+    return currentIndex;
 }
 
-function scrollToCurrentCountdownElement() {
-    if (countdownElements[currentCountdownIndex]) {
-        countdownElements[currentCountdownIndex].scrollIntoView({
+function scrollToCurrentCountdownElement(currentIndex, elements) {
+    if (elements[currentIndex]) {
+        elements[currentIndex].scrollIntoView({
             behavior: "smooth",
             block: "center",
             inline: "center"
         });
-        countdownElements.forEach(countdownElement => {
-            countdownElement.classList.remove('current-detection');
+        addBackground();
+        elements.forEach(element => {
+            // element.classList.remove('current-detection');
+            removeCornerBorder(element);
         })
-        countdownElements[currentCountdownIndex].classList.add('current-detection');
-        leftElement.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
-        numElement.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
-        rightElement.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 1;
-        console.log('index: ', currentCountdownIndex, 'list: ', countdownElements, 'element: ', countdownElements[currentCountdownIndex], 'length:', countdownElements.length);
+        // elements[currentIndex].classList.add('current-detection');
+        elements[currentIndex].style.zIndex = '99999';
+        addCornerBorder(elements[currentIndex]);
+        leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
+        numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : 0;
+        rightElement.innerText = (currentIndex < elements.length - 1) ? currentIndex + 2 : 1;
+        console.log('index: ', currentIndex, 'list: ', elements, 'element: ', elements[currentIndex], 'length:', elements.length);
+    }
+}
+
+function addBackground() {
+    const existingBackground = document.querySelector('.rgbbackground');
+
+    if (!existingBackground) {
+        const overlayDiv = document.createElement('div');
+        overlayDiv.classList.add('rgbbackground');
+
+        // set style
+        overlayDiv.style.position = 'fixed';
+        overlayDiv.style.top = '0';
+        overlayDiv.style.left = '0';
+        overlayDiv.style.right = '0';
+        overlayDiv.style.bottom = '0';
+        overlayDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; 
+        overlayDiv.style.zIndex = '9999'; 
+
+        document.body.appendChild(overlayDiv);
+    }
+}
+
+function removeBackground() {
+    const existingBackground = document.querySelector('.rgbbackground');
+    if (existingBackground) {
+        existingBackground.remove();
     }
 }
 
