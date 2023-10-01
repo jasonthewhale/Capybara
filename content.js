@@ -9,7 +9,7 @@ let countdownElements = [];
 let currentCountdownIndex = -1;
 let typeElement;
 let patternType = 'countdown';
-let hiddenElements = new Set();
+let hiddenElements = [];
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -149,7 +149,7 @@ setInterval(async () => {
     // disconnect the observer to avoid duplicate checking
     observer.disconnect();
     findHidden(document.body);
-    console.log(`Found ${hiddenElements.size} malicious nodes`);
+    console.log(`Found ${hiddenElements.length} malicious nodes`);
     // reconnect the observer
     observer.observe(document.body, config);
 }, 5000);
@@ -583,19 +583,24 @@ function catchHidden(node) {
         // Add black border to hidden text
         console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`)
         labelPattern(node);
-        hiddenElements.add(node);
+        if (!hiddenElements.includes(node)) {
+            hiddenElements.push(node);
+        }
     };
     
     if (style.color && parentStyle.backgroundColor) {
         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), 
             getRGBArray(style.color));
         if (similarity >= 0.9 
-            && similarity < 1) {
+            && similarity < 1
+            && node.parentNode.style.visibility === "visible") {
             console.log(`Found similar colour, className: ${node.className}, 
                 fontSize: ${fontSize}, similarity: ${similarity}`);
             // Add black border to hidden text
             labelPattern(node);
-            hiddenElements.add(node);
+            if (!hiddenElements.includes(node)) {
+                hiddenElements.push(node);
+            }
         }
     };
 
@@ -611,7 +616,7 @@ function catchHidden(node) {
         }
     }
 
-    malicious_link_count = hiddenElements.size;
+    malicious_link_count = hiddenElements.length;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -691,7 +696,7 @@ function highlightPattern(childNode) {
 
 
 function match_hidden(nodeValue) {
-    let hidden_trigger = ['offer', 'promotion', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'cancel', 'pay'];
+    let hidden_trigger = ['offer', 'promotion', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'subscription', 'cancel', 'pay', 'trial', 'plan'];
     return hidden_trigger.some(function(keyword) {
         let regExp = new RegExp(keyword, "i");
         if (regExp.test(nodeValue.toLowerCase())) {
