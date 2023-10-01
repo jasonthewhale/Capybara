@@ -13,7 +13,7 @@ let patternType = 'countdown';
 let leftElement;
 let rightElement;
 let numElement;
-let hiddenElements = new Set();
+let hiddenElements = [];
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -152,10 +152,10 @@ window.onload = async function() {
         // disconnect the observer to avoid duplicate checking
         observer.disconnect();
         findHidden(document.body);
-        console.log(`Found ${hiddenElements.size} malicious nodes`);
+        console.log(`Found ${hiddenElements.length} malicious nodes`);
         // reconnect the observer
         observer.observe(document.body, config);
-    }, 5000);
+    }, 3000);
 }
 
 async function findDeepestOverlayingDiv(node, depth) {
