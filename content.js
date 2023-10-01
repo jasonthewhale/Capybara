@@ -580,6 +580,7 @@ async function traverseDOM(oldNode, node) {
                 if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
                     const countdownElement = children[i].parentNode.parentNode;
                     countdownElement.style.border = '3px solid black';
+                    addHoverEffect(countdownElement);
                     // console.log("found countdown", countdownElement, countdown_value);
                     // countdown_value++;
                     if (!countdownElements.includes(countdownElement)) {
@@ -759,3 +760,51 @@ function match_hidden(nodeValue) {
         }
     });
 } 
+
+let extensionID = chrome.runtime.id;
+
+function addHoverEffect(element) {
+    if (!element || typeof element.querySelector !== 'function') {
+        console.error('Invalid element:', element);
+        return;
+    }
+
+    element.classList.add('hover-element');
+    const tooltip = document.createElement('div');
+
+
+    tooltip.classList.add('tooltip');
+    tooltip.innerHTML = `
+    <span class="warning">WARNING</span>
+    This may be a "dark pattern".
+    <a href="chrome-extension://${extensionID}/website/html/index.html" class="copy-link">Copy Link to Learn More</a>
+    `;
+
+    const link = tooltip.querySelector('.copy-link');
+    link.addEventListener('click', function(event) {
+        event.preventDefault();
+        navigator.clipboard.writeText(event.target.getAttribute('href'))
+        .then(() => {
+            alert('URL copied to clipboard!');
+        })
+        .catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    });
+
+    element.appendChild(tooltip);
+
+    element.addEventListener('mouseenter', function() {
+        let rect = element.getBoundingClientRect();
+        if (rect.bottom + tooltip.offsetHeight > window.innerHeight) {
+            tooltip.style.top = `${-tooltip.offsetHeight}px`;
+        } else {
+            tooltip.style.top = '100%';
+        }
+        tooltip.style.display = 'block';
+    });
+
+    element.addEventListener('mouseleave', function() {
+        tooltip.style.display = 'none';
+    });
+}

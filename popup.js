@@ -132,4 +132,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // Default to first column
     columns[0].classList.add('gradient-bg');
+
+
+    // Learn more link
+    let extensionID = chrome.runtime.id;
+    document.getElementById('learnMoreLink').href = `chrome-extension://${extensionID}/website/html/index.html`;
 });

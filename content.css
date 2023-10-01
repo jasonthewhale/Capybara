@@ -102,3 +102,42 @@
 .current-detection {
   background-color: cornflowerblue;
 }
+
+.tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  background-color: black;
+  color: white;
+  border-radius: 5px;
+  padding: 10px;
+  width: 440px;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  visibility: visible;
+}
+
+.tooltip:before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 200px;
+  border-width: 0 5px 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
+}
+
+.tooltip .warning {
+  background-color: #DC535D;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+
+.tooltip a {
+  color: #4187f0;
+  text-decoration: underline;
+  cursor: pointer;
+}
