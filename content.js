@@ -91,6 +91,12 @@ window.onload = async function() {
                     handleOverlaying(node);
                     traverseDOM(oldBody, document.body);
                 });
+
+                // Handle removed nodes
+                mutation.removedNodes.forEach(function(node) {
+                    handleRemovedNodes(node);
+                });
+
             } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
                 const target = mutation.target;
                 const previousStyle = mutation.oldValue;
@@ -118,10 +124,9 @@ window.onload = async function() {
         // Change to async function for stability
         // await traverseDOM(oldBody, document.body);
 
-        if (display_count_down_count >= countdown_value) {
-            countdown_value = display_count_down_count;
+        if (display_count_down_count != countdown_value) {
+            display_count_down_count = countdown_value;
         }
-        display_count_down_count = countdown_value;
 
         if (centeredPopupFound) {
             popup_value = 1;
@@ -840,4 +845,20 @@ function addHoverEffect(element) {
     element.addEventListener('mouseleave', function() {
         tooltip.style.display = 'none';
     });
+}
+
+// remove countdown elements when they are removed
+function handleRemovedNodes(removedNode){
+    const index = countdownElements.indexOf(removedNode);
+    if(index !== -1) {
+        countdownElements.splice(index, 1);
+        countdown_value = countdownElements.length;
+        console.log("removed countdown", countdown_value);
+    }
+    // Check child elements as a removed node might contain multiple child nodes
+    for(let child of removedNode.childNodes) {
+        if(child.nodeType === Node.ELEMENT_NODE) {
+            handleRemovedNodes(child);
+        }
+    }
 }
