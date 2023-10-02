@@ -88,6 +88,7 @@ window.onload = async function() {
                 // Check each added node in the mutation
                 mutation.addedNodes.forEach(function(node) {
                     handleOverlaying(node);
+                    traverseDOM(oldBody, document.body);
                 });
             } else if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
                 const target = mutation.target;
@@ -100,7 +101,7 @@ window.onload = async function() {
                 const currentDisplay = getDisplayValue(currentStyle, currentClass);
 
                 if (previousDisplay !== currentDisplay) {
-                    console.log('display: ', target);
+                    // console.log('display: ', target);
                     handleOverlaying(target);
                 }
             }
@@ -110,11 +111,11 @@ window.onload = async function() {
         // observer.disconnect();
 
         // Check countdown after every mutation
-        countdown_value = 0;
+        // countdown_value = 0;
         // Set sleep time to avoid too frequent mutations
-        await new Promise(resolve => { setTimeout(resolve, 1500) });
+        // await new Promise(resolve => { setTimeout(resolve, 1500) });
         // Change to async function for stability
-        await traverseDOM(oldBody, document.body);
+        // await traverseDOM(oldBody, document.body);
 
         if (display_count_down_count >= countdown_value) {
             countdown_value = display_count_down_count;
@@ -148,14 +149,14 @@ window.onload = async function() {
     observer.observe(document.body, config);
 
     // Check hidden every 5 secs
-    setInterval(async () => {
-        // disconnect the observer to avoid duplicate checking
-        observer.disconnect();
-        findHidden(document.body);
-        console.log(`Found ${hiddenElements.length} malicious nodes`);
-        // reconnect the observer
-        observer.observe(document.body, config);
-    }, 3000);
+    // setInterval(async () => {
+    //     // disconnect the observer to avoid duplicate checking
+    //     observer.disconnect();
+    //     findHidden(document.body);
+    //     console.log(`Found ${hiddenElements.length} malicious nodes`);
+    //     // reconnect the observer
+    //     observer.observe(document.body, config);
+    // }, 3000);
 }
 
 async function findDeepestOverlayingDiv(node, depth) {
@@ -189,9 +190,6 @@ async function findDeepestOverlayingDiv(node, depth) {
                 // if there is deeper overlaying div，update the deepest overlaying div
                 deepestOverlayingDiv = childDeepestOverlayingDiv;
             }
-
-            // Add processed class to mark this element has been processed
-            // childNode.classList.add('processed');
         }
 
         // Add a delay here to yield to the main thread
@@ -365,7 +363,6 @@ function removeCornerBorder(element) {
     });
 }
 
-
 // pop up button
 function toggleFloatingButton() {
     const existingButton = document.querySelector('.floating-button');
@@ -373,7 +370,7 @@ function toggleFloatingButton() {
     if (existingButton) {
         existingButton.remove();
         removeBackground();
-        countdownElements[currentCountdownIndex].classList.remove('current-detection');
+        removeCornerBorder(document.body);
     } else {
         const button = document.createElement('div');
         const leftBtn = document.createElement('button');
@@ -437,9 +434,6 @@ function toggleFloatingButton() {
         close.addEventListener('click', function() {
             button.remove();
             removeBackground();
-            countdownElements.forEach(countdownElement => {
-                countdownElement.classList.remove('current-detection');
-            })
         });
 
         setDefaultCount(currentCountdownIndex, countdownElements);
@@ -478,6 +472,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
         }
     });
+
     leftElement.addEventListener('click', function() {
         if (patternType == 'countdown' && countdownElements.length > 0) {
             currentCountdownIndex = handleLeftButtonClick(currentCountdownIndex, countdownElements);
@@ -516,17 +511,18 @@ function scrollToCurrentCountdownElement(currentIndex, elements) {
             inline: "center"
         });
         elements.forEach(element => {
-            // element.classList.remove('current-detection');
             removeCornerBorder(element);
         })
-        // currentElement.classList.add('current-detection');
-        currentElement.style.zIndex = '99999';
         addBackground();
         const backgroundDiv = document.querySelector('.rgbbackground');
         setTimeout(() => {
             addCornerBorder(currentElement);
             updateClip(backgroundDiv, currentElement);
         }, 500);
+
+        const currentTooltip = currentElement.querySelector('.tooltip');
+        currentTooltip.style.zIndex = '10000';
+
         // addBackground(currentElement);
         leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
         numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : 0;
@@ -589,7 +585,7 @@ async function traverseDOM(oldNode, node) {
   }
 
   for(var i = 0; i < children.length; i++) {
-    if(children[i].nodeType === 3 ) { // text node
+    if(children[i].nodeType === 3) { // text node
         
         // check if the text node is a countdown
         if(pureNumber.test(children[i].nodeValue)){
@@ -600,7 +596,10 @@ async function traverseDOM(oldNode, node) {
                 if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
                     const countdownElement = children[i].parentNode.parentNode;
                     countdownElement.style.border = '3px solid black';
-                    addHoverEffect(countdownElement);
+                    const hoverDiv = countdownElement.querySelector('.tooltip');
+                    if (!hoverDiv) {
+                        addHoverEffect(countdownElement);
+                    }
                     // console.log("found countdown", countdownElement, countdown_value);
                     // countdown_value++;
                     if (!countdownElements.includes(countdownElement)) {
@@ -610,6 +609,8 @@ async function traverseDOM(oldNode, node) {
                 }
             }
         }
+        // Add processed class to mark this element has been processed
+        // children[i].classList.add('processed');
     }
     
     // recursively traverse the DOM tree
