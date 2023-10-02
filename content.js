@@ -65,6 +65,7 @@ window.onload = async function() {
             label.style.border = '3px solid black';
             if (!precheckedElements.includes(label)) {
                 precheckedElements.push(label);
+                sortElements(precheckedElements);
             }
         }
     } 
@@ -134,16 +135,11 @@ window.onload = async function() {
             popup_value = 0;
         }
 
-        sortElements(countdownElements);
-        sortElements(precheckedElements);
-        sortElements(hiddenElements);
-
         chrome.runtime.sendMessage({
             countdown_value: countdown_value, 
             malicious_link_count: malicious_link_count, 
             prechecked_value: prechecked_value, 
             popup_value: popup_value,
-            countdownElements: countdownElements
         }, function(response) {
             // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
         });
@@ -155,15 +151,15 @@ window.onload = async function() {
     // Start observing the DOM with the given configuration
     // observer.observe(document.body, config);
 
-    // // Check hidden every 5 secs
-    // setInterval(async () => {
-    //     // disconnect the observer to avoid duplicate checking
-    //     observer.disconnect();
-    //     findHidden(document.body);
-    //     console.log(`Found ${hiddenElements.length} malicious nodes`);
-    //     // reconnect the observer
-    //     observer.observe(document.body, config);
-    // }, 3000);
+    // Check hidden every 5 secs
+    setInterval(async () => {
+        // disconnect the observer to avoid duplicate checking
+        observer.disconnect();
+        findHidden(document.body);
+        // console.log(`Found ${hiddenElements.length} malicious nodes`);
+        // reconnect the observer
+        observer.observe(document.body, config);
+    }, 3000);
 }
 
 let overlayingDivs = [];
@@ -495,10 +491,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (patternType == 'countdown' && countdownElements.length > 0) {
             currentCountdownIndex = handleLeftButtonClick(currentCountdownIndex, countdownElements);
             scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
-        } else if (patternType == 'preselected' && precheckedElements.length) {
+        } else if (patternType == 'preselected' && precheckedElements.length > 0) {
             currentPrecheckedIndex = handleLeftButtonClick(currentPrecheckedIndex, precheckedElements);
             scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
-        } else if (patternType == 'hidden info') {
+        } else if (patternType == 'hidden info' && hiddenElements.length > 0) {
             currentHiddenIndex = handleLeftButtonClick(currentHiddenIndex, hiddenElements);
             scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
         }
@@ -525,6 +521,7 @@ function handleLeftButtonClick(currentIndex, elements) {
 
 function scrollToCurrentCountdownElement(currentIndex, elements) {
     const currentElement = elements[currentIndex];
+    console.log('element: ', currentElement);
     if (currentElement) {
         currentElement.scrollIntoView({
             behavior: "smooth",
@@ -621,6 +618,7 @@ async function traverseDOM(oldNode, node) {
                     // countdown_value++;
                     if (!countdownElements.includes(countdownElement)) {
                         countdownElements.push(countdownElement);
+                        sortElements(countdownElements);
                     }
                     countdown_value = countdownElements.length;
                 }
@@ -675,10 +673,11 @@ function catchHidden(node) {
         node.parentNode.style.display = "block";
         node.parentNode.style.visibility = "visible";
         // Add black border to hidden text
-        console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node);
+        // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node);
         labelPattern(node);
         if (!hiddenElements.includes(node.parentNode)) {
             hiddenElements.push(node.parentNode);
+            sortElements(hiddenElements);
         }
     };
     
@@ -694,6 +693,7 @@ function catchHidden(node) {
             labelPattern(node);
             if (!hiddenElements.includes(node.parentNode)) {
                 hiddenElements.push(node.parentNode);
+                sortElements(hiddenElements);
             }
         }
     };
