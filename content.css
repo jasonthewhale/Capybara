@@ -102,3 +102,7 @@
 .current-detection {
   background-color: cornflowerblue;
 }
+
+.black-border {
+  border: '3px solid black !important';
+}

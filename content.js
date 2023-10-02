@@ -148,14 +148,14 @@ window.onload = async function() {
     observer.observe(document.body, config);
 
     // Check hidden every 5 secs
-    setInterval(async () => {
-        // disconnect the observer to avoid duplicate checking
-        observer.disconnect();
-        findHidden(document.body);
-        console.log(`Found ${hiddenElements.size} malicious nodes`);
-        // reconnect the observer
-        observer.observe(document.body, config);
-    }, 5000);
+    // setInterval(async () => {
+    //     // disconnect the observer to avoid duplicate checking
+    //     observer.disconnect();
+    //     findHidden(document.body);
+    //     console.log(`Found ${hiddenElements.size} malicious nodes`);
+    //     // reconnect the observer
+    //     observer.observe(document.body, config);
+    // }, 5000);
 }
 
 async function findDeepestOverlayingDiv(node, depth) {
@@ -442,9 +442,6 @@ function toggleFloatingButton() {
             })
         });
 
-        // leftBtn.innerText = (currentCountdownIndex > 0) ? currentCountdownIndex : countdownElements.length;
-        // num.innerText = (currentCountdownIndex >= 0) ? currentCountdownIndex + 1 : 0;
-        // rightBtn.innerText = (currentCountdownIndex < countdownElements.length - 1) ? currentCountdownIndex + 2 : 0;
         setDefaultCount(currentCountdownIndex, countdownElements);
     }
 }
@@ -511,45 +508,68 @@ function handleLeftButtonClick(currentIndex, elements) {
 }
 
 function scrollToCurrentCountdownElement(currentIndex, elements) {
-    if (elements[currentIndex]) {
-        elements[currentIndex].scrollIntoView({
+    const currentElement = elements[currentIndex];
+    if (currentElement) {
+        currentElement.scrollIntoView({
             behavior: "smooth",
             block: "center",
             inline: "center"
         });
-        addBackground();
         elements.forEach(element => {
             // element.classList.remove('current-detection');
             removeCornerBorder(element);
         })
-        // elements[currentIndex].classList.add('current-detection');
-        elements[currentIndex].style.zIndex = '99999';
-        addCornerBorder(elements[currentIndex]);
+        // currentElement.classList.add('current-detection');
+        currentElement.style.zIndex = '99999';
+        addBackground();
+        const backgroundDiv = document.querySelector('.rgbbackground');
+        setTimeout(() => {
+            addCornerBorder(currentElement);
+            updateClip(backgroundDiv, currentElement);
+        }, 500);
+        // addBackground(currentElement);
         leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
         numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : 0;
         rightElement.innerText = (currentIndex < elements.length - 1) ? currentIndex + 2 : 1;
-        console.log('index: ', currentIndex, 'list: ', elements, 'element: ', elements[currentIndex], 'length:', elements.length);
+        console.log('index: ', currentIndex, 'list: ', elements, 'element: ', currentElement, 'length:', elements.length);
     }
 }
 
 function addBackground() {
     const existingBackground = document.querySelector('.rgbbackground');
-
-    if (!existingBackground) {
-        const overlayDiv = document.createElement('div');
-        overlayDiv.classList.add('rgbbackground');
-
-        // set style
-        overlayDiv.style.position = 'fixed';
-        overlayDiv.style.top = '0';
-        overlayDiv.style.left = '0';
-        overlayDiv.style.right = '0';
-        overlayDiv.style.bottom = '0';
-        overlayDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; 
-        overlayDiv.style.zIndex = '9999'; 
-
-        document.body.appendChild(overlayDiv);
+    if (existingBackground) {
+        existingBackground.remove();
     }
+
+    const overlayDiv = document.createElement('div');
+    overlayDiv.classList.add('rgbbackground');
+
+    // set style
+    overlayDiv.style.position = 'fixed';
+    overlayDiv.style.top = '0';
+    overlayDiv.style.left = '0';
+    overlayDiv.style.right = '0';
+    overlayDiv.style.bottom = '0';
+    overlayDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; 
+    overlayDiv.style.zIndex = '9998'; 
+
+    document.body.appendChild(overlayDiv);
+}
+
+function updateClip(overlayDiv, selectedElement) {
+    const selectedElementRect = selectedElement.getBoundingClientRect();
+    overlayDiv.style.clipPath = `polygon(
+        0% 0%, 
+        100% 0%, 
+        100% ${selectedElementRect.top}px, 
+        ${selectedElementRect.left}px ${selectedElementRect.top}px, 
+        ${selectedElementRect.left}px ${selectedElementRect.bottom}px, 
+        ${selectedElementRect.right}px ${selectedElementRect.bottom}px, 
+        ${selectedElementRect.right}px ${selectedElementRect.top}px, 
+        100% ${selectedElementRect.top}px, 
+        100% 100%, 
+        0% 100%
+    )`;
 }
 
 function removeBackground() {
