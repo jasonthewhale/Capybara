@@ -6,14 +6,15 @@ let display_count_down_count = 0;
 let prechecked_value = 0;
 let countdownElements = [];
 let precheckedElements = [];
+let hiddenElements = [];
 let currentCountdownIndex = -1;
 let currentPrecheckedIndex = -1;
+let currentHiddenIndex = -1;
 let typeElement;
 let patternType = 'countdown';
 let leftElement;
 let rightElement;
 let numElement;
-let hiddenElements = [];
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -130,6 +131,7 @@ window.onload = async function() {
 
         sortElements(countdownElements);
         sortElements(precheckedElements);
+        sortElements(hiddenElements);
 
         chrome.runtime.sendMessage({
             countdown_value: countdown_value, 
@@ -146,9 +148,9 @@ window.onload = async function() {
     });
 
     // Start observing the DOM with the given configuration
-    observer.observe(document.body, config);
+    // observer.observe(document.body, config);
 
-    // Check hidden every 5 secs
+    // // Check hidden every 5 secs
     // setInterval(async () => {
     //     // disconnect the observer to avoid duplicate checking
     //     observer.disconnect();
@@ -158,6 +160,8 @@ window.onload = async function() {
     //     observer.observe(document.body, config);
     // }, 3000);
 }
+
+let overlayingDivs = [];
 
 async function findDeepestOverlayingDiv(node, depth) {
     let deepestOverlayingDiv = null;
@@ -179,9 +183,10 @@ async function findDeepestOverlayingDiv(node, depth) {
             childNode.childNodes.length > 0 &&
             (foundKeyword || includesImg)
         ) {
-            if (isElementOverlaying(childNode) || isElementFixed(childNode)) {
+            if (isElementOverlaying(childNode) || isElementFixedAndVisible(childNode)) {
                 // if current node is overlaying，set it as deepest overlaying div
                 deepestOverlayingDiv = childNode;
+                // console.log('deep: ', deepestOverlayingDiv, deepestOverlayingDiv.getBoundingClientRect());
             }
 
             const childDeepestOverlayingDiv = await findDeepestOverlayingDiv(childNode, depth + 1);
@@ -211,8 +216,8 @@ function isElementOverlaying(element) {
     const overlapThreshold = 0.9;
 
     // Calculate the area of intersection with the viewport
-    const intersectionArea = Math.max(0, Math.min(rect.right, viewportWidth) + Math.max(rect.left, 0)) *
-        Math.max(0, Math.min(rect.bottom, viewportHeight) + Math.max(rect.top, 0));
+    const intersectionArea = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0)) *
+        Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
 
     // Calculate the area of the viewport
     const viewportArea = viewportWidth * viewportHeight;
@@ -221,10 +226,13 @@ function isElementOverlaying(element) {
     return rect.width >= viewportWidth && rect.height >= viewportHeight && intersectionArea / viewportArea >= overlapThreshold;
 }
 
-function isElementFixed(element) {
+function isElementFixedAndVisible(element) {
     const computedStyle = window.getComputedStyle(element);
-    return computedStyle.position === 'fixed';
-  }  
+    const isFixed = computedStyle.position === 'fixed';
+    const isVisible = element.offsetParent !== null;
+
+    return isFixed && isVisible;
+}
 
 
 function getDisplayValue(styleString, classString) {
@@ -459,6 +467,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         setDefaultCount(currentPrecheckedIndex, precheckedElements);
     } else if (patternType == 'countdown') {
         setDefaultCount(currentCountdownIndex, countdownElements);
+    } else if (patternType == 'hidden info') {
+        setDefaultCount(currentHiddenIndex, hiddenElements);
     } else {
         setDefaultCount(-1, []);
     }
@@ -470,6 +480,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } else if (patternType == 'preselected' && precheckedElements.length > 0) {
             currentPrecheckedIndex = handleRightButtonClick(currentPrecheckedIndex, precheckedElements);
             scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+        } else if (patternType == 'hidden info') {
+            currentHiddenIndex = handleRightButtonClick(currentHiddenIndex, hiddenElements);
+            scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
         }
     });
 
@@ -480,6 +493,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } else if (patternType == 'preselected' && precheckedElements.length) {
             currentPrecheckedIndex = handleLeftButtonClick(currentPrecheckedIndex, precheckedElements);
             scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+        } else if (patternType == 'hidden info') {
+            currentHiddenIndex = handleLeftButtonClick(currentHiddenIndex, hiddenElements);
+            scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
         }
     });
 });
@@ -520,10 +536,6 @@ function scrollToCurrentCountdownElement(currentIndex, elements) {
             updateClip(backgroundDiv, currentElement);
         }, 500);
 
-        const currentTooltip = currentElement.querySelector('.tooltip');
-        currentTooltip.style.zIndex = '10000';
-
-        // addBackground(currentElement);
         leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
         numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : 0;
         rightElement.innerText = (currentIndex < elements.length - 1) ? currentIndex + 2 : 1;
@@ -654,14 +666,14 @@ function catchHidden(node) {
         && match_hidden(node.nodeValue)
         && node.parentNode.tagName !== 'STYLE' 
         && node.parentNode.tagName !== 'SCRIPT') {
-        node.parentNode.style.color = "red";
+        // node.parentNode.style.color = "red";
         node.parentNode.style.display = "block";
         node.parentNode.style.visibility = "visible";
         // Add black border to hidden text
-        console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`)
+        console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node);
         labelPattern(node);
-        if (!hiddenElements.includes(node)) {
-            hiddenElements.push(node);
+        if (!hiddenElements.includes(node.parentNode)) {
+            hiddenElements.push(node.parentNode);
         }
     };
     
@@ -675,8 +687,8 @@ function catchHidden(node) {
                 fontSize: ${fontSize}, similarity: ${similarity}`);
             // Add black border to hidden text
             labelPattern(node);
-            if (!hiddenElements.includes(node)) {
-                hiddenElements.push(node);
+            if (!hiddenElements.includes(node.parentNode)) {
+                hiddenElements.push(node.parentNode);
             }
         }
     };
