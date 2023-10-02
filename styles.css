@@ -182,7 +182,8 @@ body {
     color: #d9d9d9;
 }
 
-
-
-
-
+#learnMoreLink {
+    color: #4187f0;
+    text-decoration: underline;
+    cursor: pointer;
+  }

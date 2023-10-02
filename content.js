@@ -13,7 +13,7 @@ let patternType = 'countdown';
 let leftElement;
 let rightElement;
 let numElement;
-let hiddenElements = new Set();
+let hiddenElements = [];
 
 // clone the body of the page
 let oldBody = document.body.cloneNode(true);
@@ -148,14 +148,14 @@ window.onload = async function() {
     observer.observe(document.body, config);
 
     // Check hidden every 5 secs
-    // setInterval(async () => {
-    //     // disconnect the observer to avoid duplicate checking
-    //     observer.disconnect();
-    //     findHidden(document.body);
-    //     console.log(`Found ${hiddenElements.size} malicious nodes`);
-    //     // reconnect the observer
-    //     observer.observe(document.body, config);
-    // }, 5000);
+    setInterval(async () => {
+        // disconnect the observer to avoid duplicate checking
+        observer.disconnect();
+        findHidden(document.body);
+        console.log(`Found ${hiddenElements.length} malicious nodes`);
+        // reconnect the observer
+        observer.observe(document.body, config);
+    }, 3000);
 }
 
 async function findDeepestOverlayingDiv(node, depth) {
@@ -600,6 +600,7 @@ async function traverseDOM(oldNode, node) {
                 if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
                     const countdownElement = children[i].parentNode.parentNode;
                     countdownElement.style.border = '3px solid black';
+                    addHoverEffect(countdownElement);
                     // console.log("found countdown", countdownElement, countdown_value);
                     // countdown_value++;
                     if (!countdownElements.includes(countdownElement)) {
@@ -658,19 +659,24 @@ function catchHidden(node) {
         // Add black border to hidden text
         console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`)
         labelPattern(node);
-        hiddenElements.add(node);
+        if (!hiddenElements.includes(node)) {
+            hiddenElements.push(node);
+        }
     };
     
     if (style.color && parentStyle.backgroundColor) {
         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), 
             getRGBArray(style.color));
         if (similarity >= 0.9 
-            && similarity < 1) {
+            && similarity < 1
+            && node.parentNode.style.visibility === "visible") {
             console.log(`Found similar colour, className: ${node.className}, 
                 fontSize: ${fontSize}, similarity: ${similarity}`);
             // Add black border to hidden text
             labelPattern(node);
-            hiddenElements.add(node);
+            if (!hiddenElements.includes(node)) {
+                hiddenElements.push(node);
+            }
         }
     };
 
@@ -686,7 +692,7 @@ function catchHidden(node) {
         }
     }
 
-    malicious_link_count = hiddenElements.size;
+    malicious_link_count = hiddenElements.length;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -766,7 +772,7 @@ function highlightPattern(childNode) {
 
 
 function match_hidden(nodeValue) {
-    let hidden_trigger = ['offer', 'promotion', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'cancel', 'pay'];
+    let hidden_trigger = ['offer', 'promotion', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'subscription', 'cancel', 'pay', 'trial', 'plan'];
     return hidden_trigger.some(function(keyword) {
         let regExp = new RegExp(keyword, "i");
         if (regExp.test(nodeValue.toLowerCase())) {
@@ -774,3 +780,51 @@ function match_hidden(nodeValue) {
         }
     });
 } 
+
+let extensionID = chrome.runtime.id;
+
+function addHoverEffect(element) {
+    if (!element || typeof element.querySelector !== 'function') {
+        console.error('Invalid element:', element);
+        return;
+    }
+
+    element.classList.add('hover-element');
+    const tooltip = document.createElement('div');
+
+
+    tooltip.classList.add('tooltip');
+    tooltip.innerHTML = `
+    <span class="warning">WARNING</span>
+    This may be a "dark pattern".
+    <a href="chrome-extension://${extensionID}/website/html/index.html" class="copy-link">Copy Link to Learn More</a>
+    `;
+
+    const link = tooltip.querySelector('.copy-link');
+    link.addEventListener('click', function(event) {
+        event.preventDefault();
+        navigator.clipboard.writeText(event.target.getAttribute('href'))
+        .then(() => {
+            alert('URL copied to clipboard!');
+        })
+        .catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    });
+
+    element.appendChild(tooltip);
+
+    element.addEventListener('mouseenter', function() {
+        let rect = element.getBoundingClientRect();
+        if (rect.bottom + tooltip.offsetHeight > window.innerHeight) {
+            tooltip.style.top = `${-tooltip.offsetHeight}px`;
+        } else {
+            tooltip.style.top = '100%';
+        }
+        tooltip.style.display = 'block';
+    });
+
+    element.addEventListener('mouseleave', function() {
+        tooltip.style.display = 'none';
+    });
+}
