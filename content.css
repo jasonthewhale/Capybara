@@ -105,7 +105,8 @@
 
 .black-border {
   border: '3px solid black !important';
-  
+}
+
 .tooltip {
   display: none;
   position: absolute;
