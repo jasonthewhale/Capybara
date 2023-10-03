@@ -41,10 +41,14 @@ function updateBadgeForActiveTab() {
   if (activeTabId !== null && tabData.hasOwnProperty(activeTabId)) {
     const total = tabData[activeTabId].countdown_value + tabData[activeTabId].malicious_link_count + tabData[activeTabId].prechecked_value + tabData[activeTabId].popup_value;
     chrome.action.setBadgeText({ text: total.toString() });
+    // Set the badge background color
+    if (total == 0) {
+      chrome.action.setBadgeBackgroundColor({ color: "green" });
+    } else {
+      chrome.action.setBadgeBackgroundColor({ color: "red" });
+    }
   } else {
     chrome.action.setBadgeText({ text: "0" });
+    chrome.action.setBadgeBackgroundColor({ color: "green" });
   }
 }
-
-// Set the badge background color
-chrome.action.setBadgeBackgroundColor({ color: "#ff0000" });

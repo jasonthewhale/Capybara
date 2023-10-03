@@ -280,7 +280,8 @@ function findCenteredPopup(element, depth) {
         console.log('centered popup:', element);
 
         // addCornerBorder(element);
-        element.style.border = "5px solid black"
+        // element.style.border = "5px solid black"
+        addOverlay(element);
         centeredPopupFound = true;
         return;
     }
@@ -374,13 +375,6 @@ function removeCornerBorder(element) {
 
 // pop up button
 function toggleFloatingButton() {
-    const existingButton = document.querySelector('.floating-button');
-
-    if (existingButton) {
-        existingButton.remove();
-        removeBackground();
-        removeCornerBorder(document.body);
-    } else {
         const button = document.createElement('div');
         const leftBtn = document.createElement('button');
         const rightBtn = document.createElement('button');
@@ -443,10 +437,10 @@ function toggleFloatingButton() {
         close.addEventListener('click', function() {
             button.remove();
             removeBackground();
+            removeCornerBorder(document.body);
         });
 
         setDefaultCount(currentCountdownIndex, countdownElements);
-    }
 }
 
 function setDefaultCount(currentIndex, elements) {
@@ -457,48 +451,31 @@ function setDefaultCount(currentIndex, elements) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.command === "toggleFloatingButton") {
-        toggleFloatingButton();
+        const existingButton = document.querySelector('.floating-button');
+
+        if (!existingButton) {
+            toggleFloatingButton();
+        }
     }
     if (message.type) {
         patternType = message.type
         typeElement.innerText = patternType;
-    }
-
-    if (patternType == 'preselected') {
-        setDefaultCount(currentPrecheckedIndex, precheckedElements);
-    } else if (patternType == 'countdown') {
-        setDefaultCount(currentCountdownIndex, countdownElements);
-    } else if (patternType == 'hidden info') {
-        setDefaultCount(currentHiddenIndex, hiddenElements);
-    } else {
-        setDefaultCount(-1, []);
-    }
-
-    rightElement.addEventListener('click', function() {
-        if (patternType == 'countdown' && countdownElements.length > 0) {
-            currentCountdownIndex = handleRightButtonClick(currentCountdownIndex, countdownElements);
-            scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
-        } else if (patternType == 'preselected' && precheckedElements.length > 0) {
-            currentPrecheckedIndex = handleRightButtonClick(currentPrecheckedIndex, precheckedElements);
-            scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+        console.log(patternType);
+        if (patternType == 'preselected') {
+            setDefaultCount(currentPrecheckedIndex, precheckedElements);
+        } else if (patternType == 'countdown') {
+            setDefaultCount(currentCountdownIndex, countdownElements);
         } else if (patternType == 'hidden info') {
-            currentHiddenIndex = handleRightButtonClick(currentHiddenIndex, hiddenElements);
-            scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
+            setDefaultCount(currentHiddenIndex, hiddenElements);
+        } else {
+            setDefaultCount(-1, []);
         }
-    });
+    }
+    rightElement.removeEventListener('click', handleRightButtonClickWrapper);
+    leftElement.removeEventListener('click', handleLeftButtonClickWrapper);
 
-    leftElement.addEventListener('click', function() {
-        if (patternType == 'countdown' && countdownElements.length > 0) {
-            currentCountdownIndex = handleLeftButtonClick(currentCountdownIndex, countdownElements);
-            scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
-        } else if (patternType == 'preselected' && precheckedElements.length > 0) {
-            currentPrecheckedIndex = handleLeftButtonClick(currentPrecheckedIndex, precheckedElements);
-            scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
-        } else if (patternType == 'hidden info' && hiddenElements.length > 0) {
-            currentHiddenIndex = handleLeftButtonClick(currentHiddenIndex, hiddenElements);
-            scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
-        }
-    });
+    rightElement.addEventListener('click', handleRightButtonClickWrapper);  
+    leftElement.addEventListener('click', handleLeftButtonClickWrapper);
 });
 
 function handleRightButtonClick(currentIndex, elements) {
@@ -507,7 +484,21 @@ function handleRightButtonClick(currentIndex, elements) {
     } else {
         currentIndex = 0;
     }
+    console.log('index: ', currentIndex);
     return currentIndex;
+}
+
+function handleRightButtonClickWrapper() {
+    if (patternType == 'countdown' && countdownElements.length > 0) {
+        currentCountdownIndex = handleRightButtonClick(currentCountdownIndex, countdownElements);
+        scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
+    } else if (patternType == 'preselected' && precheckedElements.length > 0) {
+        currentPrecheckedIndex = handleRightButtonClick(currentPrecheckedIndex, precheckedElements);
+        scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+    } else if (patternType == 'hidden info' && hiddenElements.length > 0) {
+        currentHiddenIndex = handleRightButtonClick(currentHiddenIndex, hiddenElements);
+        scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
+    }
 }
 
 function handleLeftButtonClick(currentIndex, elements) {
@@ -519,18 +510,32 @@ function handleLeftButtonClick(currentIndex, elements) {
     return currentIndex;
 }
 
+function handleLeftButtonClickWrapper() {
+    if (patternType == 'countdown' && countdownElements.length > 0) {
+        currentCountdownIndex = handleLeftButtonClick(currentCountdownIndex, countdownElements);
+        scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
+    } else if (patternType == 'preselected' && precheckedElements.length > 0) {
+        currentPrecheckedIndex = handleLeftButtonClick(currentPrecheckedIndex, precheckedElements);
+        scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+    } else if (patternType == 'hidden info' && hiddenElements.length > 0) {
+        currentHiddenIndex = handleLeftButtonClick(currentHiddenIndex, hiddenElements);
+        scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
+    }
+}
+
 function scrollToCurrentCountdownElement(currentIndex, elements) {
     const currentElement = elements[currentIndex];
-    console.log('element: ', currentElement);
+
     if (currentElement) {
         currentElement.scrollIntoView({
             behavior: "smooth",
             block: "center",
             inline: "center"
         });
-        elements.forEach(element => {
-            removeCornerBorder(element);
-        })
+        // elements.forEach(element => {
+        //     removeCornerBorder(element);
+        // })
+        removeCornerBorder(document.body);
         addBackground();
         const backgroundDiv = document.querySelector('.rgbbackground');
         setTimeout(() => {
@@ -564,6 +569,11 @@ function addBackground() {
     overlayDiv.style.zIndex = '9998'; 
 
     document.body.appendChild(overlayDiv);
+
+    overlayDiv.addEventListener('click', function() {
+        overlayDiv.remove();
+        removeCornerBorder(document.body);
+    });
 }
 
 function updateClip(overlayDiv, selectedElement) {
@@ -861,4 +871,35 @@ function handleRemovedNodes(removedNode){
             handleRemovedNodes(child);
         }
     }
+}
+
+function addOverlay(element) {
+    const existingOverlay = document.querySelector('.overlay');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+    
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+    overlay.style.zIndex = '9998';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.boxShadow = '0 0 50px rgba(255, 255, 255, 0.5)'; // 添加虚化效果
+
+    element.style.position = 'relative';
+
+    const tooltip = document.createElement('div');
+    tooltip.classList.add('tooltip-red');
+    tooltip.style.display = 'block';
+    tooltip.innerText = 'This is a Pop-up window! It gets in the way of what you want to do and guides you to take specific actions.';
+
+    overlay.appendChild(tooltip);
+    element.appendChild(overlay);
+    element.style.position = 'fixed';
+    element.style.overflow = 'visible';
 }
