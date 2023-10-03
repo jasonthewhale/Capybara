@@ -1,9 +1,24 @@
-// Query the background script for data of the active tab
-chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
-    if (response) {
-      updatePopup(response);
-    }
+let updateInterval;
+
+// request data from the active tab and update the popup when the popup is opened
+document.addEventListener('DOMContentLoaded', function() {
+    requestActiveTabDataAndUpdateUI();
+
+    updateInterval = setInterval(requestActiveTabDataAndUpdateUI, 2500);
 });
+
+// Clear the update interval when the popup is closed
+window.addEventListener('unload', function() {
+    clearInterval(updateInterval);
+});
+
+function requestActiveTabDataAndUpdateUI() {
+    chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
+        if (response) {
+            updatePopup(response);
+        }
+    });
+}
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     // console.log(message.countdown_value, message.malicious_link_count, message.prechecked_value, message.popup_value);
@@ -36,14 +51,11 @@ function updatePopup(data) {
             // Set the height based on conditions for columns 0 to 2
             let titleValue = parseInt(title, 10);
             if(columnId === "column0" || columnId === "column1" || columnId === "column2") {
-                if(titleValue > 15) {
+                if(titleValue > 10) {
                     column.style.height = '100px';
-                } else if(titleValue > 8) {
-                    column.style.height = '85px';
-                } else if(titleValue > 5) {
-                    column.style.height = '75px';
-                } else if(titleValue > 3) {
-                    column.style.height = '65px';
+                } else {
+                    let height = 55 + 4 * titleValue;
+                    column.style.height = `${height}px`;
                 }
             }
         }
@@ -62,14 +74,14 @@ function updatePopup(data) {
 
   
     // Set risk level
-    if ((countdown_value + malicious_link_value + prechecked_value) > 50) {
+    if ((countdown_value + malicious_link_value + prechecked_value) > 15) {
         riskImageElement.src = 'src/alien.png';
         riskElement.textContent = "Dangerous";
         riskDesp.textContent = "This website has been flagged as dangerous. It poses significant risks to your online safety.";
         colorElement.style.background = 'linear-gradient(to bottom, #ff914d,#ff3131)';
         changeGradientBgColor('ff914d','ff3131');
       
-    } else if ((countdown_value + malicious_link_value + prechecked_value) > 5) {
+    } else if ((countdown_value + malicious_link_value + prechecked_value) > 4) {
         riskImageElement.src = 'src/star.png';
         riskElement.textContent = "Attention";
         riskDesp.textContent = "This website has been evaluated as risky. Be mindful of sharing sensitive information.";
@@ -134,5 +146,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Learn more link
     let extensionID = chrome.runtime.id;
-    document.getElementById('learnMoreLink').href = `chrome-extension://${extensionID}/website/html/index.html`;
+    document.getElementById('learnMoreLink').href = `https://infs3202-6844f4bb.uqcloud.net/7381/`;
 });

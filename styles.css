@@ -106,10 +106,12 @@ body {
     padding: 7px;
     justify-content: flex-end;
     cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s;
 }
 
 .gradient-bg {
     background: linear-gradient(to bottom, #5DE0E6,#004AAD);
+    transform: scale(1.05);
 }
 
 .column-title {
@@ -160,6 +162,7 @@ body {
 .tab-button{
     color: #7f7f7f;
     background-color: transparent;
+    transition: background-color 0.3s ease-in-out;
 }
 
 .title-container {
@@ -182,8 +185,39 @@ body {
     color: #d9d9d9;
 }
 
-#learnMoreLink {
-    color: #4187f0;
-    text-decoration: underline;
-    cursor: pointer;
-  }
+#container2{
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+    height: 100vh;
+}
+
+.logo img {
+    width: 200px; 
+    height: auto;
+    margin-left: 45px;
+}
+
+.introduction p {
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 2;
+    font-size: 15px;
+}
+
+.learn-more-button {
+    display: block;
+    background-color: transparent;
+    color: #ed9c3f;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: #ed9c3f 1px solid;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    text-align: center;
+}
+
+.learn-more-button:hover {
+    background-color: #ed9c3f;
+    color: #fff;
+}

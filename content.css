@@ -108,6 +108,9 @@
 }
 
 .tooltip {
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.5;
   display: none;
   position: absolute;
   top: calc(100% + 5px);

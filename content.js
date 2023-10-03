@@ -622,7 +622,7 @@ async function traverseDOM(oldNode, node) {
                     countdownElement.style.border = '3px solid black';
                     const hoverDiv = countdownElement.querySelector('.tooltip');
                     if (!hoverDiv) {
-                        addHoverEffect(countdownElement);
+                        addHoverEffect(countdownElement,1);
                     }
                     // console.log("found countdown", countdownElement, countdown_value);
                     // countdown_value++;
@@ -685,6 +685,10 @@ function catchHidden(node) {
         // Add black border to hidden text
         // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node);
         labelPattern(node);
+        const hoverDiv = node.parentNode.querySelector('.tooltip');
+        if (!hoverDiv) {
+            addHoverEffect(node.parentNode,2);
+        }
         if (!hiddenElements.includes(node.parentNode)) {
             hiddenElements.push(node.parentNode);
             sortElements(hiddenElements);
@@ -701,6 +705,10 @@ function catchHidden(node) {
                 fontSize: ${fontSize}, similarity: ${similarity}`);
             // Add black border to hidden text
             labelPattern(node);
+            const hoverDiv = node.parentNode.querySelector('.tooltip');
+            if (!hoverDiv) {
+                addHoverEffect(node.parentNode,2);
+            }
             if (!hiddenElements.includes(node.parentNode)) {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
@@ -811,7 +819,7 @@ function match_hidden(nodeValue) {
 
 let extensionID = chrome.runtime.id;
 
-function addHoverEffect(element) {
+function addHoverEffect(element,type) {
     if (!element || typeof element.querySelector !== 'function') {
         console.error('Invalid element:', element);
         return;
@@ -820,13 +828,21 @@ function addHoverEffect(element) {
     element.classList.add('hover-element');
     const tooltip = document.createElement('div');
 
-
     tooltip.classList.add('tooltip');
-    tooltip.innerHTML = `
-    <span class="warning">WARNING</span>
-    This may be a "dark pattern".
-    <a href="chrome-extension://${extensionID}/website/html/index.html" class="copy-link">Copy Link to Learn More</a>
-    `;
+    if (type == 1){
+        tooltip.innerHTML = `
+        <span class="warning">CAUTION</span>
+        This is a countdown element, a dark design often associated with urgency or time pressure
+        <a href="https://infs3202-6844f4bb.uqcloud.net/7381/dark" class="copy-link">Copy Link to Learn More</a>
+        `;
+    }else if (type == 2){
+        tooltip.innerHTML = `
+        <span class="warning">CAUTION</span>
+        This website may contain hidden information, a dark design tactic used to manipulate user perception.
+        <a href="https://infs3202-6844f4bb.uqcloud.net/7381/dark" class="copy-link">Copy Link to Learn More</a>
+        `;
+    }
+   
 
     const link = tooltip.querySelector('.copy-link');
     link.addEventListener('click', function(event) {
