@@ -16,6 +16,11 @@ function requestActiveTabDataAndUpdateUI() {
     chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
         if (response) {
             updatePopup(response);
+            const defaultDiv = document.getElementById('column1');
+            let defaultDiscription = defaultDiv.querySelector('.column-description').textContent;
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, { default: defaultDiscription });
+            });
         }
     });
 }

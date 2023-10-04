@@ -224,7 +224,7 @@ function isElementOverlaying(element) {
     const viewportArea = viewportWidth * viewportHeight;
 
     // Determine if the element covers a significant portion of the viewport
-    return rect.width >= viewportWidth && rect.height >= viewportHeight && intersectionArea / viewportArea >= overlapThreshold;
+    return rect.width >= viewportWidth * 0.95 && rect.height >= viewportHeight * 0.95 && intersectionArea / viewportArea >= overlapThreshold;
 }
 
 function isElementFixedAndVisible(element) {
@@ -390,10 +390,10 @@ function toggleFloatingButton() {
         numElement = num;
         type.classList.add('type');
         typeElement = type;
-        close.classList.add('close');
+        close.classList.add('close-floating');
 
         button.classList.add('floating-button');
-        type.innerText = patternType;
+        // type.innerText = patternType;
 
         button.style.position = 'fixed';
         button.style.bottom = '20px'; 
@@ -419,8 +419,23 @@ function toggleFloatingButton() {
             const offsetX = e.clientX - startMouseX;
             const offsetY = e.clientY - startMouseY;
 
-            button.style.right = `${startPosX - offsetX}px`;
-            button.style.bottom = `${startPosY - offsetY}px`;
+            const newRight = startPosX - offsetX;
+            const newBottom = startPosY - offsetY;
+        
+            // Get the size of the viewport
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        
+            // calculate boundary
+            const maxRight = viewportWidth - button.offsetWidth;
+            const maxBottom = viewportHeight - button.offsetHeight;
+        
+            // limit button inside
+            const limitedRight = Math.min(maxRight, Math.max(0, newRight));
+            const limitedBottom = Math.min(maxBottom, Math.max(0, newBottom));
+        
+            button.style.right = `${limitedRight}px`;
+            button.style.bottom = `${limitedBottom}px`;
         });
 
         document.addEventListener('mouseup', () => {
@@ -444,9 +459,17 @@ function toggleFloatingButton() {
 }
 
 function setDefaultCount(currentIndex, elements) {
-    leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
-    numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : 0;
-    rightElement.innerText = (currentIndex < elements.length - 1) ? currentIndex + 2 : 0;
+    if (elements.length > 0) {
+        leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
+    } else {
+        leftElement.innerText = '';
+    }
+    numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : '';
+    if (elements.length > 0) {
+        rightElement.innerText = (currentIndex < elements.length - 1) ? currentIndex + 2 : 1;
+    } else {
+        rightElement.innerText = '';
+    }
 } 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -460,17 +483,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type) {
         patternType = message.type
         typeElement.innerText = patternType;
-        console.log(patternType);
+        // console.log(patternType);
+        const existingBackground = document.querySelector('.rgbbackground');
+
         if (patternType == 'preselected') {
             setDefaultCount(currentPrecheckedIndex, precheckedElements);
+            if (precheckedElements.length > 0) {
+                currentPrecheckedIndex = 0;
+                scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+            } else {
+                existingBackground.remove();
+                removeCornerBorder(document.body);
+            }
         } else if (patternType == 'countdown') {
             setDefaultCount(currentCountdownIndex, countdownElements);
+            if (countdownElements.length > 0) {
+                currentCountdownIndex = 0;
+                scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
+            } else {
+                existingBackground.remove();
+                removeCornerBorder(document.body);
+            }
         } else if (patternType == 'hidden info') {
             setDefaultCount(currentHiddenIndex, hiddenElements);
+            if (hiddenElements.length > 0) {
+                currentHiddenIndex= 0;
+                scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
+            } else {
+                existingBackground.remove();
+                removeCornerBorder(document.body);
+            }
         } else {
             setDefaultCount(-1, []);
+            existingBackground.remove();
+            removeCornerBorder(document.body);
         }
     }
+
+    if (message.default) {
+        typeElement.innerText = message.default;
+    }
+
     rightElement.removeEventListener('click', handleRightButtonClickWrapper);
     leftElement.removeEventListener('click', handleLeftButtonClickWrapper);
 
@@ -532,20 +585,17 @@ function scrollToCurrentCountdownElement(currentIndex, elements) {
             block: "center",
             inline: "center"
         });
-        // elements.forEach(element => {
-        //     removeCornerBorder(element);
-        // })
+
         removeCornerBorder(document.body);
         addBackground();
-        const backgroundDiv = document.querySelector('.rgbbackground');
+
         setTimeout(() => {
+            const backgroundDiv = document.querySelector('.rgbbackground');
             addCornerBorder(currentElement);
             updateClip(backgroundDiv, currentElement);
         }, 500);
 
-        leftElement.innerText = (currentIndex > 0) ? currentIndex : elements.length;
-        numElement.innerText = (currentIndex >= 0) ? currentIndex + 1 : 0;
-        rightElement.innerText = (currentIndex < elements.length - 1) ? currentIndex + 2 : 1;
+        setDefaultCount(currentIndex, elements);
         console.log('index: ', currentIndex, 'list: ', elements, 'element: ', currentElement, 'length:', elements.length);
     }
 }
@@ -922,9 +972,9 @@ function addOverlay(element) {
     overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
     overlay.style.zIndex = '9998';
     overlay.style.pointerEvents = 'none';
-    overlay.style.boxShadow = '0 0 50px rgba(255, 255, 255, 0.5)'; // 添加虚化效果
+    overlay.style.boxShadow = '0 0 50px rgba(255, 255, 255, 0.5)';
 
-    element.style.position = 'relative';
+    element.style.position = 'fixed';
 
     const tooltip = document.createElement('div');
     tooltip.classList.add('tooltip-red');
@@ -933,6 +983,5 @@ function addOverlay(element) {
 
     overlay.appendChild(tooltip);
     element.appendChild(overlay);
-    element.style.position = 'fixed';
     element.style.overflow = 'visible';
 }
