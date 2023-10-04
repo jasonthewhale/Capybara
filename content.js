@@ -676,6 +676,7 @@ function catchHidden(node) {
     fontSize = parseFloat(fontSize);
     if (fontSize <= 12
         && node.nodeType === 3
+        && !isFooter(node)
         && match_hidden(node.nodeValue)
         && node.parentNode.tagName !== 'STYLE' 
         && node.parentNode.tagName !== 'SCRIPT') {
@@ -683,26 +684,36 @@ function catchHidden(node) {
         node.parentNode.style.display = "block";
         node.parentNode.style.visibility = "visible";
         // Add black border to hidden text
-        // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node);
+        console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node, node.parentNode);
         labelPattern(node);
         const hoverDiv = node.parentNode.querySelector('.tooltip');
         if (!hoverDiv) {
             addHoverEffect(node.parentNode,2);
         }
         if (!hiddenElements.includes(node.parentNode)) {
-            hiddenElements.push(node.parentNode);
-            sortElements(hiddenElements);
+            if (currentPageURL.includes('amazon')) {
+                if (node.parentNode.className instanceof String
+                    && !node.parentNode.className.includes('vjs-modal-dialog-description')) { 
+                    // temp condition for AMAZON
+                    hiddenElements.push(node.parentNode);
+                    sortElements(hiddenElements);
+                }
+            }
+            else {
+                hiddenElements.push(node.parentNode);
+                sortElements(hiddenElements);
+            }
         }
     };
     
-    if (style.color && parentStyle.backgroundColor) {
+    if (style.color && parentStyle.backgroundColor && node.nodeType === 3) {
         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), 
             getRGBArray(style.color));
-        if (similarity >= 0.9 
+        if (similarity >= 0.9
             && similarity < 1
             && node.parentNode.style.visibility === "visible") {
             console.log(`Found similar colour, className: ${node.className}, 
-                fontSize: ${fontSize}, similarity: ${similarity}`);
+                fontSize: ${fontSize}, similarity: ${similarity}, ${node}, ${node.parentNode}`);
             // Add black border to hidden text
             labelPattern(node);
             const hoverDiv = node.parentNode.querySelector('.tooltip');
@@ -767,31 +778,28 @@ function getIframe(textIframe) {
 }
 
 // Fetch the nearest parent className
-function _recurClassNameFinder(childNode) {
-    if (childNode.parentNode && childNode.parentNode.className instanceof String && childNode.parentNode.className !== null) {
-        return childNode.parentNode.className;
-    } else if (childNode.parentNode) {
-        return _recurClassNameFinder(childNode.parentNode);
-    } else {
-        return null;
+function checkClassName(element, keywords) {
+    if (element === null) {
+        return false;
     }
+
+    let className = element.className;
+    if (className !== null && className instanceof String && keywords.some(keyword => className.includes(keyword))) {
+        return true;
+    }
+
+    // Recursively check the parent element
+    return checkClassName(element.parentElement);
 }
 
 // Check if the node is in the footer (Unable to catch Temu since its className is a mess)
-function isFooter(childNode) {
-    let className = _recurClassNameFinder(childNode);
-    if (className === null) {
-        console.log('className is null');
-        return false;
+function isFooter(node) {
+    if (node.parentNode 
+        && node.parentNode.parentNode
+        && (node.parentNode.tagName === 'UL' || node.parentNode.tagName === 'LI' || node.parentNode.parentNode.tagName === 'UL' || node.parentNode.parentNode.tagName === 'LI')) {
+            return true;
     }
-    className = className.toLowerCase();
-    className = _recurClassNameFinder(childNode).toLowerCase();
-    if (typeof className !== 'string') {
-        console.log(`${className} is not a string`)
-        return true;
-    }
-    let ftKeyWords = ['ft', 'nav', 'footer'];
-    return ftKeyWords.find(keyword => className.includes(keyword));
+    return false;
 }
 
 // Standardize the style of border
@@ -815,7 +823,16 @@ function match_hidden(nodeValue) {
           return true;
         }
     });
-} 
+}
+
+function isChild(node, elements) {
+    for (let i = 0; i < elements.length; i++) {
+        if (elements[i].childNode && elements[i].childNodes.includes(node)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 let extensionID = chrome.runtime.id;
 
