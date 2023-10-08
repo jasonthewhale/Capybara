@@ -396,7 +396,7 @@ function toggleFloatingButton() {
         // type.innerText = patternType;
 
         button.style.position = 'fixed';
-        button.style.bottom = '20px'; 
+        // button.style.bottom = '20px'; 
         button.style.right = '20px';  
         button.style.zIndex = '99999';
         button.style.cursor = 'move';
@@ -470,7 +470,7 @@ function setDefaultCount(currentIndex, elements) {
     } else {
         rightElement.innerText = '';
     }
-} 
+}
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.command === "toggleFloatingButton") {
@@ -484,44 +484,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         patternType = message.type
         typeElement.innerText = patternType;
         // console.log(patternType);
-        const existingBackground = document.querySelector('.rgbbackground');
-
-        if (patternType == 'preselected') {
-            setDefaultCount(currentPrecheckedIndex, precheckedElements);
-            if (precheckedElements.length > 0) {
-                currentPrecheckedIndex = 0;
-                scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
-            } else {
-                existingBackground.remove();
-                removeCornerBorder(document.body);
-            }
-        } else if (patternType == 'countdown') {
-            setDefaultCount(currentCountdownIndex, countdownElements);
-            if (countdownElements.length > 0) {
-                currentCountdownIndex = 0;
-                scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
-            } else {
-                existingBackground.remove();
-                removeCornerBorder(document.body);
-            }
-        } else if (patternType == 'hidden info') {
-            setDefaultCount(currentHiddenIndex, hiddenElements);
-            if (hiddenElements.length > 0) {
-                currentHiddenIndex= 0;
-                scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
-            } else {
-                existingBackground.remove();
-                removeCornerBorder(document.body);
-            }
-        } else {
-            setDefaultCount(-1, []);
-            existingBackground.remove();
-            removeCornerBorder(document.body);
-        }
+        showPattern();
     }
 
     if (message.default) {
-        typeElement.innerText = message.default;
+        patternType = message.default
+        typeElement.innerText = patternType;
+        console.log(message.default);
+        showPattern(); 
     }
 
     rightElement.removeEventListener('click', handleRightButtonClickWrapper);
@@ -530,6 +500,43 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     rightElement.addEventListener('click', handleRightButtonClickWrapper);  
     leftElement.addEventListener('click', handleLeftButtonClickWrapper);
 });
+
+function showPattern() {
+    const existingBackground = document.querySelector('.rgbbackground');
+
+    if (patternType == 'preselected') {
+        setDefaultCount(currentPrecheckedIndex, precheckedElements);
+        if (precheckedElements.length > 0) {
+            currentPrecheckedIndex = 0;
+            scrollToCurrentCountdownElement(currentPrecheckedIndex, precheckedElements);
+        } else {
+            existingBackground.remove();
+            removeCornerBorder(document.body);
+        }
+    } else if (patternType == 'countdown') {
+        setDefaultCount(currentCountdownIndex, countdownElements);
+        if (countdownElements.length > 0) {
+            currentCountdownIndex = 0;
+            scrollToCurrentCountdownElement(currentCountdownIndex, countdownElements);
+        } else {
+            existingBackground.remove();
+            removeCornerBorder(document.body);
+        }
+    } else if (patternType == 'hidden info') {
+        setDefaultCount(currentHiddenIndex, hiddenElements);
+        if (hiddenElements.length > 0) {
+            currentHiddenIndex= 0;
+            scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
+        } else {
+            existingBackground.remove();
+            removeCornerBorder(document.body);
+        }
+    } else {
+        setDefaultCount(-1, []);
+        existingBackground.remove();
+        removeCornerBorder(document.body);
+    }
+}
 
 function handleRightButtonClick(currentIndex, elements) {
     if (currentIndex < elements.length - 1) {
@@ -734,7 +741,7 @@ function catchHidden(node) {
         node.parentNode.style.display = "block";
         node.parentNode.style.visibility = "visible";
         // Add black border to hidden text
-        console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node, node.parentNode);
+        // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node, node.parentNode);
         labelPattern(node);
         const hoverDiv = node.parentNode.querySelector('.tooltip');
         if (!hoverDiv) {
@@ -762,8 +769,8 @@ function catchHidden(node) {
         if (similarity >= 0.9
             && similarity < 1
             && node.parentNode.style.visibility === "visible") {
-            console.log(`Found similar colour, className: ${node.className}, 
-                fontSize: ${fontSize}, similarity: ${similarity}, ${node}, ${node.parentNode}`);
+            // console.log(`Found similar colour, className: ${node.className}, 
+            //     fontSize: ${fontSize}, similarity: ${similarity}, ${node}, ${node.parentNode}`);
             // Add black border to hidden text
             labelPattern(node);
             const hoverDiv = node.parentNode.querySelector('.tooltip');
@@ -971,7 +978,7 @@ function addOverlay(element) {
     overlay.style.height = '100%';
     overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
     overlay.style.zIndex = '9998';
-    overlay.style.pointerEvents = 'none';
+    // overlay.style.pointerEvents = 'none';
     overlay.style.boxShadow = '0 0 50px rgba(255, 255, 255, 0.5)';
 
     element.style.position = 'fixed';
@@ -984,4 +991,8 @@ function addOverlay(element) {
     overlay.appendChild(tooltip);
     element.appendChild(overlay);
     element.style.overflow = 'visible';
+
+    overlay.addEventListener('click', function() {
+        overlay.remove();
+    });
 }

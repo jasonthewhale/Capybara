@@ -1,10 +1,12 @@
 let updateInterval;
+let defaultDiscription;
 
 // request data from the active tab and update the popup when the popup is opened
 document.addEventListener('DOMContentLoaded', function() {
     requestActiveTabDataAndUpdateUI();
 
     updateInterval = setInterval(requestActiveTabDataAndUpdateUI, 2500);
+    updateOnce();
 });
 
 // Clear the update interval when the popup is closed
@@ -16,8 +18,16 @@ function requestActiveTabDataAndUpdateUI() {
     chrome.runtime.sendMessage({ action: 'getActiveTabData' }, (response) => {
         if (response) {
             updatePopup(response);
+        }
+    });
+}
+
+function updateOnce() {
+    chrome.runtime.sendMessage({ action: 'getActiveTabData'}, (response) => {
+        if (response) {
+            updatePopup(response);
             const defaultDiv = document.getElementById('column1');
-            let defaultDiscription = defaultDiv.querySelector('.column-description').textContent;
+            defaultDiscription = defaultDiv.querySelector('.column-description').textContent;
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 chrome.tabs.sendMessage(tabs[0].id, { default: defaultDiscription });
             });
