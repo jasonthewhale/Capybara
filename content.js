@@ -170,7 +170,7 @@ async function findDeepestOverlayingDiv(node, depth) {
     let foundKeyword = keywords.find(keyword => textContent.includes(keyword));
     let includesImg;
 
-    const maxDepth = 3;
+    const maxDepth = 5;
 
     if (depth >= maxDepth) {
         return null;
@@ -298,7 +298,11 @@ function sortElements(elements) {
         const rectA = a.getBoundingClientRect();
         const rectB = b.getBoundingClientRect();
         
-        return rectA.top - rectB.top;
+        if (rectA.top !== rectB.top) {
+            return rectA.top - rectB.top;
+        } else {
+            return rectA.left - rectB.left;
+        }
     });
 }
 
@@ -396,7 +400,7 @@ function toggleFloatingButton() {
         // type.innerText = patternType;
 
         button.style.position = 'fixed';
-        // button.style.bottom = '20px'; 
+        button.style.bottom = '20px'; 
         button.style.right = '20px';  
         button.style.zIndex = '99999';
         button.style.cursor = 'move';
@@ -978,10 +982,11 @@ function addOverlay(element) {
     overlay.style.height = '100%';
     overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
     overlay.style.zIndex = '9998';
-    // overlay.style.pointerEvents = 'none';
     overlay.style.boxShadow = '0 0 50px rgba(255, 255, 255, 0.5)';
 
     element.style.position = 'fixed';
+    element.style.overflow = 'visible';
+    element.style.minHeight = '0 !important';
 
     const tooltip = document.createElement('div');
     tooltip.classList.add('tooltip-red');
@@ -990,7 +995,6 @@ function addOverlay(element) {
 
     overlay.appendChild(tooltip);
     element.appendChild(overlay);
-    element.style.overflow = 'visible';
 
     overlay.addEventListener('click', function() {
         overlay.remove();
