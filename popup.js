@@ -46,30 +46,44 @@ function updatePopup(data) {
     let prechecked_value = data.prechecked_value;
     let popup_value = data.popup_value;
     let darkpatterns = [
-        {name:'countdown', value: countdown_value},
-        {name:'hidden info', value: malicious_link_value},
-        {name:'preselected', value: prechecked_value},
-        {name:'popup', value: popup_value}
+        {name:'countdown', value: countdown_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/countdown'},
+        {name:'hidden info', value: malicious_link_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/hidden'},
+        {name:'preselected', value: prechecked_value,  url: 'https://infs3202-6844f4bb.uqcloud.net/7381/preselection'},
+        {name:'popup', value: popup_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/popup'},
+        {name:'stock', value: 0, url: '#'},
+        {name:'image', value: 0, url: '#'}
     ]
     darkpatterns.sort((a, b) => b.value - a.value);
 
     // updateColumnData function
-    function updateColumnData(columnId, title, description) {
+    function updateColumnData(columnId, title, description, url) {
         let column = document.getElementById(columnId);
         if(column) {
             let columnTitle = column.querySelector('.column-title');
             let columnDescription = column.querySelector('.column-description');
 
             if(columnTitle) columnTitle.textContent = title;
-            if(columnDescription) columnDescription.textContent = description;
+            if (columnDescription) columnDescription.textContent = description;
+            if (columnDescription) columnDescription.href = url;
 
             // Set the height based on conditions for columns 0 to 2
             let titleValue = parseInt(title, 10);
+            let columnHead = column.querySelector('.col-head');
+            let columnEnd = column.querySelector('.col-end');
+            
+            if (parseInt(title, 10) === 0 || description === 'popup') {
+                columnHead.classList.add('no-click');
+                columnEnd.style.color = "#a0a0a0";
+            } else {
+                columnHead.classList.remove('no-click');
+                columnEnd.style.color = "#fff";
+            }
+
             if(columnId === "column0" || columnId === "column1" || columnId === "column2") {
-                if(titleValue > 10) {
-                    column.style.height = '100px';
+                if(titleValue > 20) {
+                    column.style.height = '120px';
                 } else {
-                    let height = 55 + 4 * titleValue;
+                    let height = 65 + 4 * titleValue;
                     column.style.height = `${height}px`;
                 }
             }
@@ -79,7 +93,7 @@ function updatePopup(data) {
     // loop through the darkpatterns array
     darkpatterns.forEach((item, index) => {
         let columnId = "column" + (index + 1);
-        updateColumnData(columnId, item.value, item.name);
+        updateColumnData(columnId, item.value, item.name, item.url);
     });
 
     const riskImageElement = document.getElementById('riskImage');
@@ -125,41 +139,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab switching
-    const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            const targetId = e.currentTarget.getAttribute('data-target');
-            const targetContent = document.getElementById(targetId);
-
-            // Remove active class from all buttons and content divs
-            document.querySelectorAll('.tab-button, .container').forEach(function(el) {
-                el.classList.remove('active');
-            });
-
-            // Add active class to the clicked button and its associated content
-            e.currentTarget.classList.add('active');
-            targetContent.classList.add('active');
-        });
-    });
-
     // Column switching
-    const columns = document.querySelectorAll('.column');
-    columns.forEach(column => {
-        column.addEventListener('click', function() {
-            columns.forEach(col => col.classList.remove('gradient-bg'));
-            this.classList.add('gradient-bg');
-            let description = this.querySelector('.column-description').textContent;
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, { type: description });
-            });
+    const columns = document.querySelectorAll('.column-all');
+    const colHeads = document.querySelectorAll('.col-head');
+
+    colHeads.forEach(colHead => {
+        colHead.addEventListener('click', function() {
+            columns.forEach(column => column.classList.remove('gradient-bg'));
+
+            // column-all
+            let parentColumn = colHead.closest('.column-all');
+            if (parentColumn) {
+                parentColumn.classList.add('gradient-bg');
+                let description = parentColumn.querySelector('.column-description').textContent;
+                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                    chrome.tabs.sendMessage(tabs[0].id, { type: description });
+                });
+            }
         });
     });
+
     // Default to first column
     columns[0].classList.add('gradient-bg');
 
 
-    // Learn more link
-    let extensionID = chrome.runtime.id;
-    document.getElementById('learnMoreLink').href = `https://infs3202-6844f4bb.uqcloud.net/7381/`;
+    // website link button
+    document.getElementById('website-button').href = `https://infs3202-6844f4bb.uqcloud.net/7381/`;
 });

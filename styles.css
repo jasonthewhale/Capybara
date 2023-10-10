@@ -4,6 +4,12 @@ body {
     font-family: 'Open Sans', sans-serif;
 }
 
+a {
+    text-decoration: none; 
+    color: inherit;      
+    outline: none;
+}
+
 .risklevel {
     width: 100%;
 }
@@ -53,29 +59,7 @@ body {
     display: inline-block;
     text-decoration: none;
     position: relative;
-}
-
-.line {
-    content: '';              
-    display: block;
-    width: 240px;
-    height: 1px;
-    background-color: currentColor;
-    position: relative;
-    margin-top: -45px;
-    margin-bottom: 10px;
-}
-
-.line::after {
-    content: '';
-    display: inline-block;
-    width: 12px;     
-    height: 12px; 
-    position: absolute;
-    right: -55px;
-    bottom: -3px;
-    background-color: currentColor;
-    clip-path: polygon(50% 0%, 60% 35%, 100% 50%, 60% 65%, 50% 100%, 40% 65%, 0 50%, 40% 35%); /* star */
+    margin: 0;
 }
 
 .description {
@@ -83,9 +67,8 @@ body {
     font-size: 12px;
     font-weight: 400;
     text-align: left;
-    margin: 20px 0;
+    margin: 10px 0;
 }
-
 
 .middle-section {
     display: grid;
@@ -95,17 +78,15 @@ body {
     align-items: end;
 }
 
-.column {
+.column-all {
     background-color: #404040;
-    padding: 5px;  /* Added padding for some spacing */
+    padding: 0px 7px 5px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     border-radius: 10px;
     color: #fff;
-    padding: 7px;
     justify-content: flex-end;
-    cursor: pointer;
     transition: transform 0.2s, background-color 0.3s;
 }
 
@@ -141,10 +122,10 @@ body {
     background-color: #191919;
 }
 
-.tab-button.active, .tab-button{
+.tab-button{
     display: inline-block;
-    width: 42%;
-    height: 30px;
+    width: 33%;
+    height: 20px;
     margin: 10px;
     padding: 5px 15px;
     border-radius: 10px;
@@ -152,17 +133,27 @@ body {
     font-family: 'Open Sans', sans-serif;
     font-weight: bold;
     cursor: pointer;
+    text-align: center;
+    text-decoration: none;
 }
 
-.tab-button.active{
+.tab-button{
     background-color: #2d2d2d;
     color: #d9d9d9;
 }
 
-.tab-button{
-    color: #7f7f7f;
+#website-button {
     background-color: transparent;
-    transition: background-color 0.3s ease-in-out;
+    color: #ed9c3f;
+    border-radius: 5px;
+    border: #ed9c3f 1px solid;
+    transition: background-color 0.3s;
+    cursor: pointer;
+}
+
+#website-button:hover {
+    background-color: #ed9c3f;
+    color: #fff;
 }
 
 .title-container {
@@ -185,13 +176,6 @@ body {
     color: #d9d9d9;
 }
 
-#container2{
-    display: flex;
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
-    height: 100vh;
-}
-
 .logo img {
     width: 200px; 
     height: auto;
@@ -205,19 +189,42 @@ body {
     font-size: 15px;
 }
 
-.learn-more-button {
-    display: block;
-    background-color: transparent;
-    color: #ed9c3f;
-    padding: 10px 20px;
-    border-radius: 5px;
-    border: #ed9c3f 1px solid;
-    text-decoration: none;
-    transition: background-color 0.3s;
-    text-align: center;
+.column-description:hover {
+    text-decoration: underline;
 }
 
-.learn-more-button:hover {
-    background-color: #ed9c3f;
-    color: #fff;
+.no-click {
+    pointer-events: none;
+    cursor: not-allowed !important;
+    opacity: 0.5;
+}
+
+@keyframes breathe {
+    0%   { opacity: 0.5; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+#riskLevel {
+    animation: breathe 3.5s infinite;
+}
+
+.risklevel {
+    position: relative;
+    overflow: hidden;
+}
+
+.level {
+    animation: reveal 5s forwards;
+    clip-path: polygon(100% 0, 100% 100%, 100% 100%, 100% 0);
+}
+
+@keyframes reveal {
+    to {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+}
+
+.col-end, .col-head{
+    cursor: pointer;
 }
