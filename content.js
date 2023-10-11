@@ -63,9 +63,9 @@ window.onload = async function() {
     if (input.checked && !isHidden && !isDisplayNone && isVisible) {
         // Highlight the preselected input label
         const label = document.querySelector(`label[for="${input.id}"]`);
-        console.log(input, rect);
-        prechecked_value++;
         if (label) {
+            console.log(input, rect);
+            prechecked_value++;
             // addCornerBorder(label);
             label.style.border = '3px solid black';
             if (!precheckedElements.includes(label)) {
