@@ -682,9 +682,9 @@ async function traverseDOM(oldNode, node) {
                     const countdownElement = children[i].parentNode.parentNode;
                     countdownElement.style.border = '3px solid black';
                     const hoverDiv = countdownElement.querySelector('.tooltip');
-                    if (!hoverDiv) {
+                    /**if (!hoverDiv) {
                         addHoverEffect(countdownElement,1);
-                    }
+                    }**/
                     // console.log("found countdown", countdownElement, countdown_value);
                     // countdown_value++;
                     if (!countdownElements.includes(countdownElement)) {
@@ -748,9 +748,10 @@ function catchHidden(node) {
         // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node, node.parentNode);
         labelPattern(node);
         const hoverDiv = node.parentNode.querySelector('.tooltip');
+        /** 
         if (!hoverDiv) {
             addHoverEffect(node.parentNode,2);
-        }
+        }**/
         if (!hiddenElements.includes(node.parentNode)) {
             if (currentPageURL.includes('amazon')) {
                 if (node.parentNode.className instanceof String
@@ -778,9 +779,9 @@ function catchHidden(node) {
             // Add black border to hidden text
             labelPattern(node);
             const hoverDiv = node.parentNode.querySelector('.tooltip');
-            if (!hoverDiv) {
+            /**if (!hoverDiv) {
                 addHoverEffect(node.parentNode,2);
-            }
+            }**/
             if (!hiddenElements.includes(node.parentNode)) {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
@@ -897,6 +898,7 @@ function isChild(node, elements) {
 
 let extensionID = chrome.runtime.id;
 
+/**
 function addHoverEffect(element,type) {
     if (!element || typeof element.querySelector !== 'function') {
         console.error('Invalid element:', element);
@@ -950,6 +952,7 @@ function addHoverEffect(element,type) {
         tooltip.style.display = 'none';
     });
 }
+**/
 
 // remove countdown elements when they are removed
 function handleRemovedNodes(removedNode){
