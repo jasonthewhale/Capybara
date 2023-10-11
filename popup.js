@@ -45,12 +45,13 @@ function updatePopup(data) {
     let malicious_link_value = data.malicious_link_count;
     let prechecked_value = data.prechecked_value;
     let popup_value = data.popup_value;
+    let stock_value = data.stock_value;
     let darkpatterns = [
         {name:'countdown', value: countdown_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/countdown'},
         {name:'hidden info', value: malicious_link_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/hidden'},
         {name:'preselected', value: prechecked_value,  url: 'https://infs3202-6844f4bb.uqcloud.net/7381/preselection'},
         {name:'popup', value: popup_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/popup'},
-        {name:'stock', value: 0, url: '#'},
+        {name:'stock', value: stock_value, url: '#'},
         {name:'image', value: 0, url: '#'}
     ]
     darkpatterns.sort((a, b) => b.value - a.value);
@@ -103,14 +104,14 @@ function updatePopup(data) {
 
   
     // Set risk level
-    if ((countdown_value + malicious_link_value + prechecked_value) > 15) {
+    if ((countdown_value + malicious_link_value + prechecked_value + stock_value) > 30) {
         riskImageElement.src = 'src/alien.png';
         riskElement.textContent = "Dangerous";
         riskDesp.textContent = "This website has been flagged as dangerous. It poses significant risks to your online safety.";
         colorElement.style.background = 'linear-gradient(to bottom, #ff914d,#ff3131)';
         changeGradientBgColor('ff914d','ff3131');
       
-    } else if ((countdown_value + malicious_link_value + prechecked_value) > 4) {
+    } else if ((countdown_value + malicious_link_value + prechecked_value + stock_value) > 10) {
         riskImageElement.src = 'src/star.png';
         riskElement.textContent = "Attention";
         riskDesp.textContent = "This website has been evaluated as risky. Be mindful of sharing sensitive information.";

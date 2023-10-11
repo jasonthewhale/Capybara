@@ -4,10 +4,13 @@ let popup_value = 0;
 let malicious_link_count = 0;
 let display_count_down_count = 0;
 let prechecked_value = 0;
+let stock_value = 0;
 let countdownElements = [];
+let stockElements = [];
 let precheckedElements = [];
 let hiddenElements = [];
 let currentCountdownIndex = -1;
+let currentStockIndex = -1;
 let currentPrecheckedIndex = -1;
 let currentHiddenIndex = -1;
 let typeElement;
@@ -23,6 +26,8 @@ const pureNumber = /^\d+$/;
 const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){2,4}/gi;
 // regex for not countdown
 const notCountdown = /(?:\d{1,2}\s*:\s*){4,}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){5,}/gi;
+// stock keywords for only...left
+const stockKey = /(?:only\s*\d+\s*left)|(?:almost\s*sold\s*out)/i;
 
 // Get the current URL
 const currentPageURL = window.location.href;
@@ -140,6 +145,7 @@ window.onload = async function() {
             malicious_link_count: malicious_link_count, 
             prechecked_value: prechecked_value, 
             popup_value: popup_value,
+            stock_value: stock_value,
         }, function(response) {
             // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
         });
@@ -535,7 +541,16 @@ function showPattern() {
             existingBackground.remove();
             removeCornerBorder(document.body);
         }
-    } else {
+    } else if (patternType == 'stock') {
+        setDefaultCount(currentStockIndex, stockElements);
+        if (stockElements.length > 0) {
+            currentStockIndex = 0;
+            scrollToCurrentCountdownElement(currentStockIndex, stockElements);
+        } else {
+            existingBackground.remove();
+            removeCornerBorder(document.body);
+        }
+    }else {
         setDefaultCount(-1, []);
         existingBackground.remove();
         removeCornerBorder(document.body);
@@ -562,6 +577,9 @@ function handleRightButtonClickWrapper() {
     } else if (patternType == 'hidden info' && hiddenElements.length > 0) {
         currentHiddenIndex = handleRightButtonClick(currentHiddenIndex, hiddenElements);
         scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
+    } else if (patternType == 'stock' && stockElements.length > 0) {
+        currentStockIndex = handleRightButtonClick(currentStockIndex, stockElements);
+        scrollToCurrentCountdownElement(currentStockIndex, stockElements);
     }
 }
 
@@ -584,6 +602,9 @@ function handleLeftButtonClickWrapper() {
     } else if (patternType == 'hidden info' && hiddenElements.length > 0) {
         currentHiddenIndex = handleLeftButtonClick(currentHiddenIndex, hiddenElements);
         scrollToCurrentCountdownElement(currentHiddenIndex, hiddenElements);
+    } else if (patternType == 'stock' && stockElements.length > 0) {
+        currentStockIndex = handleLeftButtonClick(currentStockIndex, stockElements);
+        scrollToCurrentCountdownElement(currentStockIndex, stockElements);
     }
 }
 
@@ -604,7 +625,7 @@ function scrollToCurrentCountdownElement(currentIndex, elements) {
             const backgroundDiv = document.querySelector('.rgbbackground');
             addCornerBorder(currentElement);
             updateClip(backgroundDiv, currentElement);
-        }, 500);
+        }, 1000);
 
         setDefaultCount(currentIndex, elements);
         console.log('index: ', currentIndex, 'list: ', elements, 'element: ', currentElement, 'length:', elements.length);
@@ -671,7 +692,19 @@ async function traverseDOM(oldNode, node) {
 
   for(var i = 0; i < children.length; i++) {
     if(children[i].nodeType === 3) { // text node
-        
+
+        // check if the text node is a stock
+        if(stockKey.test(children[i].nodeValue)){
+            const stockElement = children[i].parentNode;
+            stockElement.style.border = '3px solid black';
+            if (!stockElements.includes(stockElement)) {
+                stockElements.push(stockElement);
+                sortElements(stockElements);
+            }
+            stock_value = stockElements.length;
+           
+        }
+
         // check if the text node is a countdown
         if(pureNumber.test(children[i].nodeValue)){
             if(!oldChildren || (oldChildren[i] && children[i].nodeValue !== oldChildren[i].nodeValue)) {
@@ -681,12 +714,6 @@ async function traverseDOM(oldNode, node) {
                 if (countdown.test(allTexts) && !notCountdown.test(allTexts)) {
                     const countdownElement = children[i].parentNode.parentNode;
                     countdownElement.style.border = '3px solid black';
-                    const hoverDiv = countdownElement.querySelector('.tooltip');
-                    /**if (!hoverDiv) {
-                        addHoverEffect(countdownElement,1);
-                    }**/
-                    // console.log("found countdown", countdownElement, countdown_value);
-                    // countdown_value++;
                     if (!countdownElements.includes(countdownElement)) {
                         countdownElements.push(countdownElement);
                         sortElements(countdownElements);
