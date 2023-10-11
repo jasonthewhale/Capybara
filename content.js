@@ -19,8 +19,7 @@ let leftElement;
 let rightElement;
 let numElement;
 
-// clone the body of the page
-let oldBody = document.body.cloneNode(true);
+
 const pureNumber = /^\d+$/;
 // regex for countdown
 const countdown = /(?:\d{1,2}\s*:\s*){1,3}\d{1,2}|(?:\d{1,2}\s*(?:days?|hours?|minutes?|seconds?|[a-zA-Z]{1,3}\.?)\s*){2,4}/gi;
@@ -43,6 +42,16 @@ let centeredPopupFound = false;
 var imageUrl = chrome.runtime.getURL('images/floating_background.png');
 
 window.onload = async function() {
+    
+    setInterval(async function() {
+        // clone the body of the page
+        oldBody = document.body.cloneNode(true);
+        
+        setTimeout(async function() {
+            await traverseDOM(oldBody, document.body);
+        }, 1000);
+    
+    }, 5000);
     // Get all form inputs (checkboxes and radio buttons)
     const formInputs = document.querySelectorAll('input');
 
@@ -95,7 +104,7 @@ window.onload = async function() {
                 // Check each added node in the mutation
                 mutation.addedNodes.forEach(function(node) {
                     handleOverlaying(node);
-                    traverseDOM(oldBody, document.body);
+                    
                 });
 
                 // Handle removed nodes
@@ -128,7 +137,7 @@ window.onload = async function() {
         // Set sleep time to avoid too frequent mutations
         // await new Promise(resolve => { setTimeout(resolve, 1500) });
         // Change to async function for stability
-        // await traverseDOM(oldBody, document.body);
+
 
         if (display_count_down_count != countdown_value) {
             display_count_down_count = countdown_value;

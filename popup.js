@@ -81,10 +81,10 @@ function updatePopup(data) {
             }
 
             if(columnId === "column0" || columnId === "column1" || columnId === "column2") {
-                if(titleValue > 20) {
+                if(titleValue > 50) {
                     column.style.height = '120px';
                 } else {
-                    let height = 65 + 4 * titleValue;
+                    let height = 65 + 1 * titleValue;
                     column.style.height = `${height}px`;
                 }
             }
@@ -104,14 +104,13 @@ function updatePopup(data) {
 
   
     // Set risk level
-    if ((countdown_value + malicious_link_value + prechecked_value + stock_value) > 30) {
+    if ((countdown_value + malicious_link_value + prechecked_value + stock_value) > 50) {
         riskImageElement.src = 'src/alien.png';
         riskElement.textContent = "Dangerous";
         riskDesp.textContent = "This website has been flagged as dangerous. It poses significant risks to your online safety.";
-        colorElement.style.background = 'linear-gradient(to bottom, #ff914d,#ff3131)';
         changeGradientBgColor('ff914d','ff3131');
       
-    } else if ((countdown_value + malicious_link_value + prechecked_value + stock_value) > 10) {
+    } else if ((countdown_value + malicious_link_value + prechecked_value + stock_value) > 25) {
         riskImageElement.src = 'src/star.png';
         riskElement.textContent = "Attention";
         riskDesp.textContent = "This website has been evaluated as risky. Be mindful of sharing sensitive information.";
