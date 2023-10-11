@@ -109,12 +109,14 @@ function updatePopup(data) {
         riskElement.textContent = "Dangerous";
         riskDesp.textContent = "This website has been flagged as dangerous. It poses significant risks to your online safety.";
         changeGradientBgColor('ff914d','ff3131');
+        riskElement.style.animation = 'breathe 1s infinite';
       
     } else if ((countdown_value + malicious_link_value + prechecked_value + stock_value) > 25) {
         riskImageElement.src = 'src/star.png';
         riskElement.textContent = "Attention";
         riskDesp.textContent = "This website has been evaluated as risky. Be mindful of sharing sensitive information.";
         changeGradientBgColor('FFDE59', 'FF914D');
+        riskElement.style.animation = 'breathe 2s infinite';
     
     }
 }

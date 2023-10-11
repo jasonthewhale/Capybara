@@ -42,7 +42,7 @@ let centeredPopupFound = false;
 var imageUrl = chrome.runtime.getURL('images/floating_background.png');
 
 window.onload = async function() {
-    
+
     setInterval(async function() {
         // clone the body of the page
         oldBody = document.body.cloneNode(true);
@@ -51,7 +51,7 @@ window.onload = async function() {
             await traverseDOM(oldBody, document.body);
         }, 1000);
     
-    }, 5000);
+    }, 3000);
     // Get all form inputs (checkboxes and radio buttons)
     const formInputs = document.querySelectorAll('input');
 
