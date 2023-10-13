@@ -79,11 +79,11 @@ a {
 }
 
 .column-all {
+    min-height: 55px;
     background-color: #404040;
     padding: 0px 7px 5px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
     border-radius: 10px;
     color: #fff;
     justify-content: flex-end;
@@ -228,4 +228,10 @@ a {
 
 .col-end, .col-head{
     cursor: pointer;
+}
+
+.col-head{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
 }
