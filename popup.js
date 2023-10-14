@@ -51,8 +51,8 @@ function updatePopup(data) {
         {name:'hidden info', value: malicious_link_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/hidden'},
         {name:'preselected', value: prechecked_value,  url: 'https://infs3202-6844f4bb.uqcloud.net/7381/preselection'},
         {name:'popup', value: popup_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/popup'},
-        {name:'stock', value: stock_value, url: '#'},
-        {name:'image', value: 0, url: '#'}
+        {name:'stock', value: stock_value, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/toyemotion'},
+        {name:'image', value: 0, url: 'https://infs3202-6844f4bb.uqcloud.net/7381/countdown'}
     ]
     darkpatterns.sort((a, b) => b.value - a.value);
 
@@ -81,11 +81,11 @@ function updatePopup(data) {
             }
 
             if(columnId === "column0" || columnId === "column1" || columnId === "column2") {
-                if(titleValue > 50) {
-                    column.style.height = '120px';
+                if(titleValue > 70) {
+                    columnHead.style.height = '120px';
                 } else {
-                    let height = 65 + 1 * titleValue;
-                    column.style.height = `${height}px`;
+                    let height = 40 + 1 * titleValue;
+                    columnHead.style.height = `${height}px`;
                 }
             }
         }
