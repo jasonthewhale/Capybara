@@ -10,8 +10,37 @@ a {
     outline: none;
 }
 
+#ai-notify {
+    display: none;
+    color: white;
+    padding: 10px;
+    position: fixed;
+    z-index: 1;
+    bottom: 10px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    border-radius: 5px;
+    width: 80%;
+    text-align: center;
+}
+
+
 .risklevel {
     width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+#docai {
+    width: 30px;
+    height: 30px;
+    transition: transform 0.5s;
+    cursor: pointer;
+}
+  
+#docai:hover {
+    transform: scale(1.2);
+    
 }
 
 .container.active {

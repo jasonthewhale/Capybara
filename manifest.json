@@ -10,7 +10,16 @@
       "128": "images/128-capy.png",
       "512": "images/512-capy.png"
   },
-  "permissions": ["activeTab", "storage", "scripting", "tabs", "webRequest", "webNavigation"],
+  "permissions": [
+      "activeTab",
+      "<all_urls>",
+      "storage", 
+      "downloads",
+      "scripting", 
+      "tabs", 
+      "webRequest", 
+      "webNavigation"
+    ],
   "action": {
       "default_popup": "popup.html"
   },

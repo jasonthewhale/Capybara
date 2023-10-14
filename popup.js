@@ -167,4 +167,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // website link button
     document.getElementById('website-button').href = `https://infs3202-6844f4bb.uqcloud.net/7381/`;
+
+    // document ai button
+    document.getElementById('docai').addEventListener('click', function() {
+        var notification = document.getElementById('ai-notify');
+        notification.textContent = 'Google document AI is analysing the website, pls wait.';
+        notification.style.backgroundColor = '#EE5622';
+        notification.style.display = 'block';
+        setTimeout(function() {
+            notification.style.display = 'none';
+        }, 1500); // hides after 1.5 sec
+
+        chrome.runtime.sendMessage({msg: "capture"}, async function(response) {
+            let img = response.imgSrc.split(',')[1];
+            console.log(img);
+            await fetch('http://localhost:8081/post/imgDetect', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					img64: img
+				})
+			})
+            .then(response => response.text())
+			.then(fullText => {
+				console.log(fullText);
+                analyseText(fullText);
+                notification.textContent = 'Analysis complete!';
+                notification.style.backgroundColor = '#4CAF50';
+                notification.style.display = 'block';
+                setTimeout(function() {
+                    notification.style.display = 'none';
+                }, 1500); // hides after 1.5 sec
+			})
+			.catch(err => console.log(err));
+        });
+    });
 });
+
+
+function analyseText(fullText) {
+    let trimContents = fullText.split('Paragraph text:\n').filter(Boolean).map(s => s.trim());
+    let splitContents = trimContents[0].split('\n');
+    console.log(splitContents);
+}
