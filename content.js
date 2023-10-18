@@ -779,13 +779,13 @@ function catchHidden(node) {
         && !isFooter(node)
         && match_hidden(node.nodeValue)
         && node.parentNode.tagName !== 'STYLE' 
-        && node.parentNode.tagName !== 'SCRIPT') {
+        && node.parentNode.tagName !== 'SCRIPT'
+        && node.parentNode.nodeName !== 'A') {
         // node.parentNode.style.color = "red";
         node.parentNode.style.display = "block";
         node.parentNode.style.visibility = "visible";
         // Add black border to hidden text
         // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node, node.parentNode);
-        labelPattern(node);
         const hoverDiv = node.parentNode.querySelector('.tooltip');
         /** 
         if (!hoverDiv) {
@@ -805,10 +805,14 @@ function catchHidden(node) {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
             }
+            labelPattern(node);
         }
     };
     
-    if (style.color && parentStyle.backgroundColor && node.nodeType === 3) {
+    if (!currentPageURL.includes('amazon')
+        && style.color 
+        && parentStyle.backgroundColor 
+        && node.nodeType === 3) {
         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), 
             getRGBArray(style.color));
         if (similarity >= 0.9
@@ -817,7 +821,6 @@ function catchHidden(node) {
             // console.log(`Found similar colour, className: ${node.className}, 
             //     fontSize: ${fontSize}, similarity: ${similarity}, ${node}, ${node.parentNode}`);
             // Add black border to hidden text
-            labelPattern(node);
             const hoverDiv = node.parentNode.querySelector('.tooltip');
             /**if (!hoverDiv) {
                 addHoverEffect(node.parentNode,2);
@@ -826,6 +829,7 @@ function catchHidden(node) {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
                 addHoverDiv(node.parentNode, 'hidden info');
+                labelPattern(node);
             }
         }
     };
@@ -899,7 +903,11 @@ function checkClassName(element, keywords) {
 function isFooter(node) {
     if (node.parentNode 
         && node.parentNode.parentNode
-        && (node.parentNode.tagName === 'UL' || node.parentNode.tagName === 'LI' || node.parentNode.parentNode.tagName === 'UL' || node.parentNode.parentNode.tagName === 'LI')) {
+        && (node.parentNode.tagName === 'UL' 
+            || node.parentNode.tagName === 'LI' 
+            || node.parentNode.parentNode.tagName === 'UL' 
+            || node.parentNode.parentNode.tagName === 'LI'
+            || node.parentNode.parentNode.tagName === 'A')) {
             return true;
     }
     return false;
@@ -919,7 +927,7 @@ function highlightPattern(childNode) {
 
 
 function match_hidden(nodeValue) {
-    let hidden_trigger = ['offer', 'promotion', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'subscription', 'cancel', 'pay', 'trial', 'plan'];
+    let hidden_trigger = ['offer', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'subscription', 'cancel', 'pay', 'trial', 'plan'];
     return hidden_trigger.some(function(keyword) {
         let regExp = new RegExp(keyword, "i");
         if (regExp.test(nodeValue.toLowerCase())) {
