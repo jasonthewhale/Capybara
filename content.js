@@ -721,14 +721,34 @@ async function loopDOM(node) {
             let src = img.getAttribute('data-src') || img.getAttribute('src');
           
             let testImg = new Image();
-            testImg.onload = function() {
-                if(this.width > 800 && this.height > 600 && !allImagesElements.has(src)) { 
+            testImg.onload = async function() {
+                if(this.width > 800 && this.height > 600 && !allImagesElements.has(src) && !src.includes('.gif')) { 
                     allImagesElements.set(src, img);
   
                     if (!ImageApiElements.includes(img)) {
                         ImageApiElements.push(img);
                         sortElements(ImageApiElements);
                     }
+
+                    console.log(`sent map size is: ${allImagesElements.size}`);
+
+                    if (allImagesElements.size > 0) {
+                        await fetch('http://localhost:8081/post/imgDetect', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            imgs: Object.fromEntries(allImagesElements)
+                            })
+                        })
+                        .then(response => response.text())
+                        .then(fullText => {
+                            console.log(fullText);
+                        })
+                        .catch(err => console.log(err));
+                        }
+
                     image_value = ImageApiElements.length;
               }
           };
