@@ -795,14 +795,13 @@ function catchHidden(node) {
                     // temp condition for AMAZON
                     hiddenElements.push(node.parentNode);
                     sortElements(hiddenElements);
-                    labelPattern(node);
                 }
             }
             else {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
-                labelPattern(node);
             }
+            labelPattern(node);
         }
     };
     
@@ -818,7 +817,6 @@ function catchHidden(node) {
             // console.log(`Found similar colour, className: ${node.className}, 
             //     fontSize: ${fontSize}, similarity: ${similarity}, ${node}, ${node.parentNode}`);
             // Add black border to hidden text
-            labelPattern(node);
             const hoverDiv = node.parentNode.querySelector('.tooltip');
             /**if (!hoverDiv) {
                 addHoverEffect(node.parentNode,2);
@@ -826,6 +824,7 @@ function catchHidden(node) {
             if (!hiddenElements.includes(node.parentNode)) {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
+                labelPattern(node);
             }
         }
     };
