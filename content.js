@@ -134,7 +134,6 @@ window.onload = async function() {
             }
         });
 
-        // disconnect the observer to avoid duplicate checking
         // observer.disconnect();
 
         // Check countdown after every mutation
