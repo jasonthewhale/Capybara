@@ -84,6 +84,7 @@ window.onload = async function() {
             if (!precheckedElements.includes(label)) {
                 precheckedElements.push(label);
                 sortElements(precheckedElements);
+                addHoverDiv(label, 'prechecked');
             }
         }
     } 
@@ -756,6 +757,7 @@ async function traverseDOM(oldNode, node) {
             if (!stockElements.includes(stockElement)) {
                 stockElements.push(stockElement);
                 sortElements(stockElements);
+                addHoverDiv(stockElement, 'stock');
             }
             stock_value = stockElements.length;
            
@@ -773,6 +775,7 @@ async function traverseDOM(oldNode, node) {
                     if (!countdownElements.includes(countdownElement)) {
                         countdownElements.push(countdownElement);
                         sortElements(countdownElements);
+                        addHoverDiv(countdownElement, 'countdown');
                     }
                     countdown_value = countdownElements.length;
                 }
@@ -823,13 +826,13 @@ function catchHidden(node) {
         && !isFooter(node)
         && match_hidden(node.nodeValue)
         && node.parentNode.tagName !== 'STYLE' 
-        && node.parentNode.tagName !== 'SCRIPT') {
+        && node.parentNode.tagName !== 'SCRIPT'
+        && node.parentNode.nodeName !== 'A') {
         // node.parentNode.style.color = "red";
         node.parentNode.style.display = "block";
         node.parentNode.style.visibility = "visible";
         // Add black border to hidden text
         // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node, node.parentNode);
-        labelPattern(node);
         const hoverDiv = node.parentNode.querySelector('.tooltip');
         /** 
         if (!hoverDiv) {
@@ -842,16 +845,22 @@ function catchHidden(node) {
                     // temp condition for AMAZON
                     hiddenElements.push(node.parentNode);
                     sortElements(hiddenElements);
+                    addHoverDiv(node.parentNode, 'hidden info');
                 }
             }
             else {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
+                addHoverDiv(node.parentNode, 'hidden info');
             }
+            labelPattern(node);
         }
     };
     
-    if (style.color && parentStyle.backgroundColor && node.nodeType === 3) {
+    if (!currentPageURL.includes('amazon')
+        && style.color 
+        && parentStyle.backgroundColor 
+        && node.nodeType === 3) {
         let similarity = colorSimilarityNormalized(getRGBArray(parentStyle.backgroundColor), 
             getRGBArray(style.color));
         if (similarity >= 0.9
@@ -860,7 +869,6 @@ function catchHidden(node) {
             // console.log(`Found similar colour, className: ${node.className}, 
             //     fontSize: ${fontSize}, similarity: ${similarity}, ${node}, ${node.parentNode}`);
             // Add black border to hidden text
-            labelPattern(node);
             const hoverDiv = node.parentNode.querySelector('.tooltip');
             /**if (!hoverDiv) {
                 addHoverEffect(node.parentNode,2);
@@ -868,6 +876,8 @@ function catchHidden(node) {
             if (!hiddenElements.includes(node.parentNode)) {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
+                addHoverDiv(node.parentNode, 'hidden info');
+                labelPattern(node);
             }
         }
     };
@@ -941,7 +951,11 @@ function checkClassName(element, keywords) {
 function isFooter(node) {
     if (node.parentNode 
         && node.parentNode.parentNode
-        && (node.parentNode.tagName === 'UL' || node.parentNode.tagName === 'LI' || node.parentNode.parentNode.tagName === 'UL' || node.parentNode.parentNode.tagName === 'LI')) {
+        && (node.parentNode.tagName === 'UL' 
+            || node.parentNode.tagName === 'LI' 
+            || node.parentNode.parentNode.tagName === 'UL' 
+            || node.parentNode.parentNode.tagName === 'LI'
+            || node.parentNode.parentNode.tagName === 'A')) {
             return true;
     }
     return false;
@@ -961,7 +975,7 @@ function highlightPattern(childNode) {
 
 
 function match_hidden(nodeValue) {
-    let hidden_trigger = ['offer', 'promotion', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'subscription', 'cancel', 'pay', 'trial', 'plan'];
+    let hidden_trigger = ['offer', 'discount', 'forgot', 'voucher', 'tax', 'subscribe', 'subscription', 'cancel', 'pay', 'trial', 'plan'];
     return hidden_trigger.some(function(keyword) {
         let regExp = new RegExp(keyword, "i");
         if (regExp.test(nodeValue.toLowerCase())) {
@@ -1084,5 +1098,31 @@ function addOverlay(element) {
 
     overlay.addEventListener('click', function() {
         overlay.remove();
+    });
+}
+
+function addHoverDiv(element, content) {
+    const div = document.createElement('div');
+    // div.style.width = '450px';
+    div.style.backgroundColor = 'black';
+    div.style.color = 'white';
+    div.style.fontSize = '25px';
+    div.style.borderRadius = '15px';
+    div.style.position = 'fixed';
+    div.style.bottom = '20px';
+    div.style.left = '20px';
+    div.style.padding = '10px';
+    div.style.paddingInline = '20px';
+    div.style.zIndex = '99999';
+    div.style.textAlign = 'center';
+    div.innerHTML = `Dark pattern detected: <span style="color: #DC535D;">${content}</span>`;
+    div.style.display = 'none';
+    document.body.appendChild(div);
+    element.addEventListener('mouseenter', function() {
+        div.style.display = 'block';
+    });
+
+    element.addEventListener('mouseleave', function() {
+        div.style.display = 'none';
     });
 }

@@ -38,6 +38,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    if (request.msg == "capture") {
+        chrome.tabs.captureVisibleTab(
+          null,
+          {},
+          function(dataUrl)
+          {
+              // chrome.downloads.download({
+              //     url: dataUrl,
+              //     filename: "screenshot.png"
+              // });
+            sendResponse({imgSrc:dataUrl});
+          }
+        );
+      }
+    return true;
+  }
+);
+
 // Update the badge text for the active tab
 function updateBadgeForActiveTab() {
   if (activeTabId !== null && tabData.hasOwnProperty(activeTabId)) {
