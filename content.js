@@ -782,7 +782,6 @@ function catchHidden(node) {
         node.parentNode.style.visibility = "visible";
         // Add black border to hidden text
         // console.log(`Found hidden info, className: ${node.className}, fontSize: ${fontSize}`, node, node.parentNode);
-        labelPattern(node);
         const hoverDiv = node.parentNode.querySelector('.tooltip');
         /** 
         if (!hoverDiv) {
@@ -795,11 +794,13 @@ function catchHidden(node) {
                     // temp condition for AMAZON
                     hiddenElements.push(node.parentNode);
                     sortElements(hiddenElements);
+                    labelPattern(node);
                 }
             }
             else {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
+                labelPattern(node);
             }
         }
     };
