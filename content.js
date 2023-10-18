@@ -80,6 +80,7 @@ window.onload = async function() {
             if (!precheckedElements.includes(label)) {
                 precheckedElements.push(label);
                 sortElements(precheckedElements);
+                addHoverDiv(label, 'prechecked');
             }
         }
     } 
@@ -709,6 +710,7 @@ async function traverseDOM(oldNode, node) {
             if (!stockElements.includes(stockElement)) {
                 stockElements.push(stockElement);
                 sortElements(stockElements);
+                addHoverDiv(stockElement, 'stock');
             }
             stock_value = stockElements.length;
            
@@ -726,6 +728,7 @@ async function traverseDOM(oldNode, node) {
                     if (!countdownElements.includes(countdownElement)) {
                         countdownElements.push(countdownElement);
                         sortElements(countdownElements);
+                        addHoverDiv(countdownElement, 'countdown');
                     }
                     countdown_value = countdownElements.length;
                 }
@@ -795,6 +798,7 @@ function catchHidden(node) {
                     // temp condition for AMAZON
                     hiddenElements.push(node.parentNode);
                     sortElements(hiddenElements);
+                    addHoverDiv(node.parentNode, 'hidden info');
                 }
             }
             else {
@@ -821,6 +825,7 @@ function catchHidden(node) {
             if (!hiddenElements.includes(node.parentNode)) {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
+                addHoverDiv(node.parentNode, 'hidden info');
             }
         }
     };
@@ -1037,5 +1042,31 @@ function addOverlay(element) {
 
     overlay.addEventListener('click', function() {
         overlay.remove();
+    });
+}
+
+function addHoverDiv(element, content) {
+    const div = document.createElement('div');
+    // div.style.width = '450px';
+    div.style.backgroundColor = 'black';
+    div.style.color = 'white';
+    div.style.fontSize = '25px';
+    div.style.borderRadius = '15px';
+    div.style.position = 'fixed';
+    div.style.bottom = '20px';
+    div.style.left = '20px';
+    div.style.padding = '10px';
+    div.style.paddingInline = '20px';
+    div.style.zIndex = '99999';
+    div.style.textAlign = 'center';
+    div.innerHTML = `Dark pattern detected: <span style="color: #DC535D;">${content}</span>`;
+    div.style.display = 'none';
+    document.body.appendChild(div);
+    element.addEventListener('mouseenter', function() {
+        div.style.display = 'block';
+    });
+
+    element.addEventListener('mouseleave', function() {
+        div.style.display = 'none';
     });
 }
