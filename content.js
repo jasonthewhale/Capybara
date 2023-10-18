@@ -804,6 +804,7 @@ function catchHidden(node) {
             else {
                 hiddenElements.push(node.parentNode);
                 sortElements(hiddenElements);
+                addHoverDiv(node.parentNode, 'hidden info');
             }
             labelPattern(node);
         }
