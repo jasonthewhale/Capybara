@@ -51,6 +51,8 @@ window.onload = async function() {
         // clone the body of the page
         oldBody = document.body.cloneNode(true);
         
+        await loopDOM(document.body);
+        
         setTimeout(async function() {
             await traverseDOM(oldBody, document.body);
         }, 1000);
@@ -709,6 +711,33 @@ function removeBackground() {
     if (existingBackground) {
         existingBackground.remove();
     }
+}
+
+async function loopDOM(node) {
+      // check if the node is an image
+      const imgElements = document.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
+  
+      imgElements.forEach(img => {
+          
+            let src = img.getAttribute('data-src') || img.getAttribute('src');
+          
+            let testImg = new Image();
+            testImg.onload = function() {
+                if(this.width > 800 && this.height > 600 && !allImagesElements.has(src)) { 
+                    allImagesElements.set(src, img);
+  
+                    if (!ImageApiElements.includes(img)) {
+                        ImageApiElements.push(img);
+                        sortElements(ImageApiElements);
+                    }
+                    image_value = ImageApiElements.length;
+              }
+          };
+          testImg.onerror = function() {
+              console.error('Error loading image:', src);
+          };
+          testImg.src = src;
+        });
 }
 
 // loop through all text nodes
