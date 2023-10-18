@@ -19,6 +19,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       prechecked_value: request.prechecked_value || 0,
       popup_value: request.popup_value || 0,
       stock_value: request.stock_value || 0,
+      image_value: request.image_value || 0,
     };
 
     // Update the badge if this is the current active tab
@@ -40,7 +41,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Update the badge text for the active tab
 function updateBadgeForActiveTab() {
   if (activeTabId !== null && tabData.hasOwnProperty(activeTabId)) {
-    const total = tabData[activeTabId].stock_value + tabData[activeTabId].countdown_value + tabData[activeTabId].malicious_link_count + tabData[activeTabId].prechecked_value + tabData[activeTabId].popup_value;
+    const total = tabData[activeTabId].stock_value + tabData[activeTabId].countdown_value + tabData[activeTabId].malicious_link_count + tabData[activeTabId].prechecked_value + tabData[activeTabId].popup_value + tabData[activeTabId].image_value;
     chrome.action.setBadgeText({ text: total.toString() });
     // Set the badge background color
     if (total == 0) {

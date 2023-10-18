@@ -5,14 +5,18 @@ let malicious_link_count = 0;
 let display_count_down_count = 0;
 let prechecked_value = 0;
 let stock_value = 0;
+let image_value = 0;
 let countdownElements = [];
 let stockElements = [];
 let precheckedElements = [];
 let hiddenElements = [];
+let ImageApiElements = [];
+let allImagesElements = new Map();
 let currentCountdownIndex = -1;
 let currentStockIndex = -1;
 let currentPrecheckedIndex = -1;
 let currentHiddenIndex = -1;
+let currentImageIndex = -1;
 let typeElement;
 let patternType = 'countdown';
 let leftElement;
@@ -155,8 +159,9 @@ window.onload = async function() {
             prechecked_value: prechecked_value, 
             popup_value: popup_value,
             stock_value: stock_value,
+            image_value: image_value,
         }, function(response) {
-            // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value);
+            // console.log("checked ", countdown_value, malicious_link_count, prechecked_value, popup_value, stock_value, image_value);
         });
 
         // reconnect the observer
@@ -559,7 +564,16 @@ function showPattern() {
             existingBackground.remove();
             removeCornerBorder(document.body);
         }
-    }else {
+    } else if (patternType == 'image') {
+        setDefaultCount(currentImageIndex, ImageApiElements);
+        if (ImageApiElements.length > 0) {
+            currentImageIndex = 0;
+            scrollToCurrentCountdownElement(currentImageIndex, ImageApiElements);
+        } else {
+            existingBackground.remove();
+            removeCornerBorder(document.body);
+        }
+    } else {
         setDefaultCount(-1, []);
         existingBackground.remove();
         removeCornerBorder(document.body);
@@ -589,6 +603,9 @@ function handleRightButtonClickWrapper() {
     } else if (patternType == 'stock' && stockElements.length > 0) {
         currentStockIndex = handleRightButtonClick(currentStockIndex, stockElements);
         scrollToCurrentCountdownElement(currentStockIndex, stockElements);
+    } else if (patternType == 'image' && ImageApiElements.length > 0) {
+        currentImageIndex = handleRightButtonClick(currentImageIndex, ImageApiElements);
+        scrollToCurrentCountdownElement(currentImageIndex, ImageApiElements);
     }
 }
 
@@ -614,6 +631,9 @@ function handleLeftButtonClickWrapper() {
     } else if (patternType == 'stock' && stockElements.length > 0) {
         currentStockIndex = handleLeftButtonClick(currentStockIndex, stockElements);
         scrollToCurrentCountdownElement(currentStockIndex, stockElements);
+    } else if (patternType == 'image' && ImageApiElements.length > 0) {
+        currentImageIndex = handleLeftButtonClick(currentImageIndex, ImageApiElements);
+        scrollToCurrentCountdownElement(currentImageIndex, ImageApiElements);
     }
 }
 
@@ -699,7 +719,34 @@ async function traverseDOM(oldNode, node) {
     return; // Ignore style and script tags
   }
 
+    // check if the node is an image
+
+    const imgElements = document.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
+
+    imgElements.forEach(img => {
+        
+        let src = img.getAttribute('data-src') || img.getAttribute('src');
+        
+        let testImg = new Image();
+        testImg.onload = function() {
+            if(this.width > 800 && this.height > 600 && !allImagesElements.has(src)) { 
+                allImagesElements.set(src, img);
+
+                if (!ImageApiElements.includes(img)) {
+                    ImageApiElements.push(img);
+                    sortElements(ImageApiElements);
+                }
+                image_value = ImageApiElements.length;
+            }
+        };
+        testImg.onerror = function() {
+            console.error('Error loading image:', src);
+        };
+        testImg.src = src;
+    });
+
   for(var i = 0; i < children.length; i++) {
+
     if(children[i].nodeType === 3) { // text node
 
         // check if the text node is a stock
