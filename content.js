@@ -59,6 +59,10 @@ window.onload = async function() {
         }, 1000);
     
     }, 3000);
+
+    setInterval(async function() {
+        await loopDOM(document.body);
+    }, 10000);
     // Get all form inputs (checkboxes and radio buttons)
     const formInputs = document.querySelectorAll('input');
 
