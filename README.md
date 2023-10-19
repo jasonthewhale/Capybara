@@ -13,6 +13,47 @@ A Chrome Extension designed to detect and alert users to malicious dark patterns
 - Hidden Information Detection: Detects hidden charges, costs and any information concealed to deceive users.
 - Similar Color Trick Detection: Essential for detecting camouflaged text, buttons or any other elements intentionally blending to the background, creating visual illusions.
 
+## Structure
+```
+.
+├── README.md
+├── app.js
+├── chrome
+│   ├── README.md
+│   ├── background.js
+│   ├── capybara_team_coversheet.pdf
+│   ├── content.css
+│   ├── content.js
+│   ├── education_website
+│   ├── images
+│   ├── manifest.json
+│   ├── popup.html
+│   ├── popup.js
+│   ├── src
+│   └── styles.css
+├── package-lock.json
+└── package.json
+```
+
+- `README.md`: This is the main README file for the project.
+- `app.js`: This is the core file of backend ([Google document AI]('https://cloud.google.com/document-ai?hl=en')).
+- `chrome`: This directory contains all the files related to the Chrome extension.
+    - `README.md`: This is the README file for the Chrome extension.
+    - `background.js`: This is the background script for the Chrome extension.
+    - `capybara_team_coversheet.pdf`: This is a PDF file for team coversheet.
+    - `content.css`: This is a CSS file for the content scripts of the Chrome extension.
+    - `content.js`: This is a JavaScript file for the content scripts of the Chrome extension.
+    - `education_website`: This directory contains files related to an education website.
+    - `images`: This directory contains image files used in the Chrome extension.
+    - `manifest.json`: This is the manifest file for the Chrome extension.
+    - `popup.html`: This is the HTML file for the popup of the Chrome extension.
+    - `popup.js`: This is the JavaScript file for the popup of the Chrome extension.
+    - `src`: This directory contains source files for the Chrome extension.
+    - `styles.css`: This is a CSS file for the styles of the Chrome extension.
+- `package-lock.json`: This is an automatically generated file based on the exact versions of your npm dependencies that were installed for your project.
+- `package.json`: This file holds various metadata relevant to the project. This file is used to give information to npm that allows it to identify the project as well as handle the project's dependencies.
+
+
 ## Installation
 1. Download this repository as a zip and extract or clone the repository.
 2. Open the Chrome browser, go to `chrome://extensions`.
