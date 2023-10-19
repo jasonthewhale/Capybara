@@ -36,7 +36,7 @@ A Chrome Extension designed to detect and alert users to malicious dark patterns
 ```
 
 - `README.md`: This is the main README file for the project.
-- `app.js`: This is the core file of backend ([Google document AI]('https://cloud.google.com/document-ai?hl=en')).
+- `app.js`: This is the core file of backend ([Google document AI](https://cloud.google.com/document-ai?hl=en)).
 - `chrome`: This directory contains all the files related to the Chrome extension.
     - `README.md`: This is the README file for the Chrome extension.
     - `background.js`: This is the background script for the Chrome extension.
