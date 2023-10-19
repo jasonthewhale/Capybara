@@ -51,10 +51,11 @@ window.onload = async function() {
         // clone the body of the page
         oldBody = document.body.cloneNode(true);
         
-        await loopDOM(document.body);
-        
         setTimeout(async function() {
             await traverseDOM(oldBody, document.body);
+        }, 1000);
+        setTimeout(async function() {
+            await loopDOM(document.body);
         }, 1000);
     
     }, 3000);
@@ -714,49 +715,50 @@ function removeBackground() {
 
 async function loopDOM(node) {
       // check if the node is an image
-      const imgElements = document.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
-  
+      const imgElements = node.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
+
       imgElements.forEach(img => {
-          
-            let src = img.getAttribute('data-src') || img.getAttribute('src');
-          
-            let testImg = new Image();
-            testImg.onload = async function() {
-                if(this.width > 800 && this.height > 600 && !allImagesElements.has(src) && !src.includes('.gif')) { 
-                    allImagesElements.set(src, img);
-  
-                    if (!ImageApiElements.includes(img)) {
-                        ImageApiElements.push(img);
-                        sortElements(ImageApiElements);
-                    }
+        console.log('start');
+        let src = img.getAttribute('data-src') || img.getAttribute('src');
+      
+        let testImg = new Image();
+        testImg.onload = async function() {
+            if (this.width > 800 && this.height > 600 && !allImagesElements.has(src) && !src.includes('.gif')) {
+                allImagesElements.set(src, img);
 
-                    console.log(`sent map size is: ${allImagesElements.size}`);
+                if (!ImageApiElements.includes(img)) {
+                    ImageApiElements.push(img);
+                    sortElements(ImageApiElements);
+                }
 
-                    if (allImagesElements.size > 0) {
-                        await fetch('http://localhost:8081/post/imgDetect', {
+                console.log(`sent map size is: ${allImagesElements.size}`);
+
+                if (allImagesElements.size > 0) {
+                    await fetch('http://localhost:8081/post/imgDetect', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             imgs: Object.fromEntries(allImagesElements)
-                            })
                         })
-                        .then(response => response.text())
-                        .then(fullText => {
-                            console.log(fullText);
-                        })
-                        .catch(err => console.log(err));
-                        }
+                    })
+                    .then(response => response.text())
+                    .then(fullText => {
+                        console.log(fullText);
+                    })
+                    .catch(err => console.log(err));
+                }
 
-                    image_value = ImageApiElements.length;
-              }
-          };
-          testImg.onerror = function() {
-              console.error('Error loading image:', src);
-          };
-          testImg.src = src;
-        });
+                image_value = ImageApiElements.length;
+            }
+        };
+        testImg.onerror = function() {
+            console.error('Error loading image:', src);
+        };
+        testImg.src = src;
+      });
+      
 }
 
 // loop through all text nodes
@@ -770,29 +772,29 @@ async function traverseDOM(oldNode, node) {
 
     // check if the node is an image
 
-    const imgElements = document.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
+    // const imgElements = document.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
 
-    imgElements.forEach(img => {
+    // imgElements.forEach(img => {
         
-        let src = img.getAttribute('data-src') || img.getAttribute('src');
+    //     let src = img.getAttribute('data-src') || img.getAttribute('src');
         
-        let testImg = new Image();
-        testImg.onload = function() {
-            if(this.width > 800 && this.height > 600 && !allImagesElements.has(src)) { 
-                allImagesElements.set(src, img);
+    //     let testImg = new Image();
+    //     testImg.onload = function() {
+    //         if(this.width > 800 && this.height > 600 && !allImagesElements.has(src)) { 
+    //             allImagesElements.set(src, img);
 
-                if (!ImageApiElements.includes(img)) {
-                    ImageApiElements.push(img);
-                    sortElements(ImageApiElements);
-                }
-                image_value = ImageApiElements.length;
-            }
-        };
-        testImg.onerror = function() {
-            console.error('Error loading image:', src);
-        };
-        testImg.src = src;
-    });
+    //             if (!ImageApiElements.includes(img)) {
+    //                 ImageApiElements.push(img);
+    //                 sortElements(ImageApiElements);
+    //             }
+    //             image_value = ImageApiElements.length;
+    //         }
+    //     };
+    //     testImg.onerror = function() {
+    //         console.error('Error loading image:', src);
+    //     };
+    //     testImg.src = src;
+    // });
 
   for(var i = 0; i < children.length; i++) {
 
