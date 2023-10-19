@@ -50,7 +50,7 @@ window.onload = async function() {
     setInterval(async function() {
         // clone the body of the page
         oldBody = document.body.cloneNode(true);
-        
+
         await loopDOM(document.body);
         
         setTimeout(async function() {
@@ -58,6 +58,10 @@ window.onload = async function() {
         }, 1000);
     
     }, 3000);
+
+    setInterval(async function() {
+        await loopDOM(document.body);
+    }, 10000);
     // Get all form inputs (checkboxes and radio buttons)
     const formInputs = document.querySelectorAll('input');
 
@@ -712,32 +716,33 @@ function removeBackground() {
     }
 }
 
-async function loopDOM(node) {
-      // check if the node is an image
-      const imgElements = document.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
+// async function loopDOM(node) {
+//       // check if the node is an image
+//       const imgElements = document.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
   
-      imgElements.forEach(img => {
+//       imgElements.forEach(img => {
           
-            let src = img.getAttribute('data-src') || img.getAttribute('src');
+//             let src = img.getAttribute('data-src') || img.getAttribute('src');
           
-            let testImg = new Image();
-            testImg.onload = function() {
-                if(this.width > 800 && this.height > 600 && !allImagesElements.has(src)) { 
-                    allImagesElements.set(src, img);
+//             let testImg = new Image();
+//             testImg.onload = function() {
+//                 if(this.width > 800 && this.height > 300 && this.height < 800 && !allImagesElements.has(src)) { 
+//                     allImagesElements.set(src, img);
+//                     console.log(this.width, this.height);
   
-                    if (!ImageApiElements.includes(img)) {
-                        ImageApiElements.push(img);
-                        sortElements(ImageApiElements);
-                    }
-                    image_value = ImageApiElements.length;
-              }
-          };
-          testImg.onerror = function() {
-              console.error('Error loading image:', src);
-          };
-          testImg.src = src;
-        });
-}
+//                     if (!ImageApiElements.includes(img)) {
+//                         ImageApiElements.push(img);
+//                         sortElements(ImageApiElements);
+//                     }
+//                     image_value = ImageApiElements.length;
+//               }
+//           };
+//           testImg.onerror = function() {
+//               console.error('Error loading image:', src);
+//           };
+//           testImg.src = src;
+//         });
+// }
 
 // loop through all text nodes
 async function traverseDOM(oldNode, node) {
