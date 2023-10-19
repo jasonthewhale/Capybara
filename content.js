@@ -22,6 +22,7 @@ let patternType = 'countdown';
 let leftElement;
 let rightElement;
 let numElement;
+let images = new Map();
 
 
 const pureNumber = /^\d+$/;
@@ -60,9 +61,9 @@ window.onload = async function() {
     
     }, 3000);
 
-    setInterval(async function() {
-        await loopDOM(document.body);
-    }, 10000);
+    // setInterval(async function() {
+    //     await loopDOM(document.body);
+    // }, 10000);
     // Get all form inputs (checkboxes and radio buttons)
     const formInputs = document.querySelectorAll('input');
 
@@ -718,22 +719,22 @@ function removeBackground() {
 }
 
 async function loopDOM(node) {
-      // check if the node is an image
-      const imgElements = node.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
+    // check if the node is an image
+    const imgElements = node.querySelectorAll('img.base-img__inner.lazyload.base-img__cover');
 
-      imgElements.forEach(img => {
-        console.log('start');
+    let num = 0;
+
+    imgElements.forEach(img => {
+        img.dataset.num = num;
+        num++;
+
         let src = img.getAttribute('data-src') || img.getAttribute('src');
       
         let testImg = new Image();
         testImg.onload = async function() {
             if (this.width > 800 && this.height > 600 && !allImagesElements.has(src) && !src.includes('.gif')) {
-                allImagesElements.set(src, img);
-
-                if (!ImageApiElements.includes(img)) {
-                    ImageApiElements.push(img);
-                    sortElements(ImageApiElements);
-                }
+                allImagesElements.set(src, img.dataset.num);
+                images.set(img.dataset.num, img);
 
                 console.log(`sent map size is: ${allImagesElements.size}`);
 
@@ -747,9 +748,17 @@ async function loopDOM(node) {
                             imgs: Object.fromEntries(allImagesElements)
                         })
                     })
-                    .then(response => response.text())
-                    .then(fullText => {
-                        console.log(fullText);
+                    .then(response => response.json())
+                    .then(retArray => {
+                        console.log(retArray);
+                        const numArray = retArray.map(item => item.num);
+                        for (const num of numArray) {
+                            console.log(images.get(num));
+                            if (!ImageApiElements.includes(images.get(num))) {
+                                ImageApiElements.push(images.get(num));
+                                sortElements(ImageApiElements);
+                            }
+                        }
                     })
                     .catch(err => console.log(err));
                 }
@@ -761,9 +770,9 @@ async function loopDOM(node) {
             console.error('Error loading image:', src);
         };
         testImg.src = src;
-      });
-      
+    });
 }
+
 
 // loop through all text nodes
 async function traverseDOM(oldNode, node) {
